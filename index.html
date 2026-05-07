@@ -1277,268 +1277,6 @@ async function bookWellness() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// NAPTÁR
-// ════════════════════════════════════════════════════════════════════════════
-let calYear = new Date().getFullYear();
-let calMonth = new Date().getMonth();
-let calSelectedDate = null;
-
-function calPrev() {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderCalendar();
-}
-function calNext() {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderCalendar();
-}
-
-function renderCalendar() {
-  const months = ['Január','Február','Március','Április','Május','Június','Július','Augusztus','Szeptember','Október','November','December'];
-  document.getElementById('calTitle').textContent = `${calYear}. ${months[calMonth]}`;
-
-  const grid = document.getElementById('calGrid');
-  const firstDay = new Date(calYear, calMonth, 1);
-  const lastDay  = new Date(calYear, calMonth+1, 0);
-  const today    = todayStr();
-
-  // Monday-based offset
-  let startDow = firstDay.getDay(); // 0=Sun
-  startDow = startDow === 0 ? 6 : startDow - 1;
-
-  // Build event date set
-  const eventDates = {};
-  STATE.events.forEach(ev => {
-    if (!eventDates[ev.date]) eventDates[ev.date] = [];
-    eventDates[ev.date].push(ev);
-  });
-
-  let html = '';
-  // Empty cells before first day
-  for (let i = 0; i < startDow; i++) {
-    html += `<div style="background:var(--white);min-height:44px;padding:4px"></div>`;
-  }
-  // Day cells
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isToday    = dateStr === today;
-    const isSelected = dateStr === calSelectedDate;
-    const evs        = eventDates[dateStr] || [];
-    const dow        = (startDow + d - 1) % 7; // 5=Sat,6=Sun
-    const isWeekend  = dow === 5 || dow === 6;
-
-    html += `<div onclick="calSelectDay('${dateStr}')" style="
-      background:${isSelected ? 'var(--forest-mid)' : 'var(--white)'};
-      min-height:44px;padding:4px;cursor:pointer;position:relative;
-      border:${isToday ? '2px solid var(--gold)' : '2px solid transparent'};
-      transition:.15s">
-      <div style="font-size:12px;font-weight:${isToday?'700':'400'};
-        color:${isSelected?'var(--cream)':isWeekend?'var(--red)':'var(--ink)'};
-        text-align:center;line-height:1.6">${d}</div>
-      ${evs.map(e => `<div style="background:${isSelected?'rgba(255,255,255,.25)':'var(--moss)'};border-radius:3px;margin-top:2px;padding:1px 3px;font-size:8px;color:${isSelected?'var(--cream)':'#fff'};overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${e.type}</div>`).join('')}
-    </div>`;
-  }
-  grid.innerHTML = html;
-
-  // Render room week view
-  renderRoomWeek();
-}
-
-function calSelectDay(dateStr) {
-  calSelectedDate = dateStr;
-  renderCalendar();
-
-  const detail = document.getElementById('calDayDetail');
-  const evs = STATE.events.filter(e => e.date === dateStr);
-
-  if (!evs.length) {
-    detail.style.display = 'block';
-    detail.innerHTML = `<div class="card" style="text-align:center;color:var(--stone);font-size:13px;padding:20px">
-      Ezen a napon nincs rögzített esemény
-      <br><button onclick="document.getElementById('qEvDate').value='${dateStr}';openEventModal()" 
-        style="margin-top:12px;background:var(--forest-mid);color:var(--cream);border:none;border-radius:10px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase">
-        + Esemény rögzítése
-      </button>
-    </div>`;
-    return;
-  }
-
-  detail.style.display = 'block';
-  detail.innerHTML = `<p class="sec-label">${dateStr} – Események</p>` +
-    evs.map(ev => `
-    <div class="card" style="margin-bottom:10px;position:relative">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div>
-          <div style="font-family:var(--ff-serif);font-size:18px;color:var(--forest)">${ev.type}</div>
-          <div style="font-size:11px;color:var(--stone);margin-top:2px">${ev.time} · ${ev.place}</div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button onclick="openEditEvent(${ev.id})" style="background:var(--parchment);border:none;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer;color:var(--forest)">✏️ Szerk.</button>
-          <button onclick="deleteEvent(${ev.id});calSelectDay('${dateStr}')" style="background:#fce4ec;border:none;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer;color:var(--red)">🗑</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:var(--cream);border-radius:8px;padding:8px">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Létszám</div>
-          <div style="font-size:14px;font-weight:600;color:var(--forest)">${ev.count} fő</div>
-        </div>
-        <div style="background:var(--cream);border-radius:8px;padding:8px">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div>
-          <div style="font-size:11px;color:var(--ink)">${ev.catering || '–'}</div>
-        </div>
-        ${ev.note ? `<div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div>
-          <div style="font-size:12px;font-style:italic">${ev.note}</div>
-        </div>` : ''}
-        ${ev.takeaway ? `<div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div>
-          <div style="font-size:12px">${ev.takeaway_time || ''} ${ev.takeaway_who ? '– '+ev.takeaway_who : ''}</div>
-        </div>` : ''}
-      </div>
-    </div>`).join('');
-}
-
-// Edit event modal
-function openEditEvent(id) {
-  const ev = STATE.events.find(e => e.id === id);
-  if (!ev) return;
-  // Pre-fill the events form and switch to that tab
-  document.getElementById('evType').value  = ev.type;
-  document.getElementById('evDate').value  = ev.date;
-  document.getElementById('evTime').value  = ev.time;
-  document.getElementById('evPlace').value = ev.place;
-  document.getElementById('evCount').value = ev.count;
-  document.getElementById('evNote').value  = ev.note || '';
-  document.getElementById('evCatering').value = ev.catering || 'Nincs catering';
-  // Delete old and re-save on submit (simplest approach)
-  window._editingEventId = id;
-  showTab('events');
-  toast('Szerkesztés – módosítás után mentse el!');
-}
-
-// Room weekly view
-function renderRoomWeek() {
-  const cont = document.getElementById('roomWeekView');
-  if (!cont) return;
-  const today = new Date();
-  // Build 7 days starting today
-  const days = Array.from({length:7}, (_,i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    return d.toISOString().slice(0,10);
-  });
-  const dayLabels = ['H','K','Sze','Cs','P','Szo','V'];
-
-  // Header
-  let html = `<table style="width:100%;border-collapse:collapse;font-size:10px">
-    <thead><tr>
-      <th style="padding:8px 6px;background:var(--parchment);text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--stone);position:sticky;left:0;min-width:80px">Szoba</th>`;
-  days.forEach((d,i) => {
-    const dow = new Date(d).getDay();
-    const isWeekend = dow === 0 || dow === 6;
-    const isToday   = d === todayStr();
-    html += `<th style="padding:8px 4px;background:${isToday?'var(--gold)':'var(--parchment)'};text-align:center;min-width:36px;color:${isToday?'var(--ink)':isWeekend?'var(--red)':'var(--stone)'}">
-      ${d.slice(8)}<br><span style="font-weight:400">${['V','H','K','Sze','Cs','P','Szo'][dow]}</span>
-    </th>`;
-  });
-  html += '</tr></thead><tbody>';
-
-  // Rows
-  STATE.rooms.forEach(r => {
-    html += `<tr>
-      <td style="padding:6px;background:var(--white);font-weight:600;font-size:10px;color:var(--forest);position:sticky;left:0;border-bottom:1px solid var(--parchment)">${r.name}</td>`;
-    days.forEach(d => {
-      // Check if room has a note with this date (from Previo import)
-      const hasCheckout = r.status === 'checkout' && d === todayStr();
-      const hasCheckin  = r.status === 'checkin'  && d === todayStr();
-      const isOccupied  = r.status === 'occupied';
-      let bg = 'var(--white)', label = '', color = 'var(--ink)';
-      if (d === todayStr()) {
-        if (hasCheckout) { bg='#fce4ec'; label='Ki'; color='var(--red)'; }
-        else if (hasCheckin) { bg='#fff8e1'; label='Be'; color='#f57f17'; }
-        else if (isOccupied) { bg='#e3f2fd'; label='●'; color='#1565c0'; }
-      }
-      html += `<td style="padding:4px 2px;background:${bg};text-align:center;border-bottom:1px solid var(--parchment);border-left:1px solid var(--parchment);font-size:9px;font-weight:700;color:${color}">${label}</td>`;
-    });
-    html += '</tr>';
-  });
-
-  html += '</tbody></table>';
-  cont.innerHTML = html;
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// MŰSZAKÁTADÓ
-// ════════════════════════════════════════════════════════════════════════════
-async function loadShift() {
-  const data = await sbFetch('/shift?order=updated_at.desc&limit=1');
-  if (data && data.length > 0) {
-    STATE.shift = data[0].message || '';
-    document.getElementById('shiftNote').value = STATE.shift;
-  }
-}
-
-async function saveShift() {
-  const message = document.getElementById('shiftNote').value;
-  try {
-    await sbFetch('/shift', {
-      method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({ id: 1, message, updated_at: new Date().toISOString() })
-    });
-    STATE.shift = message;
-    // Show checkmark on button
-    const btn = document.querySelector('.shift-save');
-    if (btn) { btn.textContent = '✅ Elmentve!'; setTimeout(() => btn.textContent = 'Mentés & átadás', 2000); }
-    toast('✅ Műszakátadó mentve!');
-  } catch(e) {
-    toast('⚠️ Mentési hiba – próbálja újra!');
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// FORM HELPERS
-// ════════════════════════════════════════════════════════════════════════════
-function toggleTakeaway() {
-  document.getElementById('takeawayFields').style.display =
-    document.getElementById('takeaway').checked ? 'grid' : 'none';
-}
-function photoSelected(input) {
-  if (!input.files || !input.files[0]) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('photoImg').src = e.target.result;
-    document.getElementById('photoPreview').style.display = 'block';
-  };
-  reader.readAsDataURL(input.files[0]);
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// VALÓS IDEJŰ FRISSÍTÉS (Supabase Realtime)
-// ════════════════════════════════════════════════════════════════════════════
-function initRealtime() {
-  // Supabase Realtime WebSocket channel
-  const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
-  const ws = new WebSocket(wsUrl);
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ topic:'realtime:public', event:'phx_join', payload:{}, ref:'1' }));
-  };
-
-  ws.onmessage = (msg) => {
-    const data = JSON.parse(msg.data);
-    if (data.event !== 'INSERT' && data.event !== 'UPDATE' && data.event !== 'DELETE') return;
-    const table = data.payload?.data?.table;
-    if (table === 'rooms')   { loadRooms().then(() => renderRooms('all')); }
-    if (table === 'events')  { loadEvents().then(renderEvents); }
-    if (table === 'wellness'){ loadWellness().then(renderWellness); }
-    if (table === 'shift')   { loadShift(); }
-  };
-
-  ws.onerror = () => {}; // csendben kezeljük
-}
-
 // ════════════════════════════════════════════════════════════════════════════
 // NAPTÁR
 // ════════════════════════════════════════════════════════════════════════════
@@ -1891,21 +1629,23 @@ async function cleanOldEvents() {
 async function init() {
   setLoading(true);
   try {
-    await Promise.all([loadRooms(), loadEvents(), loadWellness(), loadShift()]);
-    // Auto-delete events older than 60 days
-    await cleanOldEvents();
-    await autoDeleteOldEvents();
-    updateDashboardStats();
-    renderEvents();
-    initRealtime();
-    document.getElementById('evDate').value   = todayStr();
-    document.getElementById('qEvDate').value  = todayStr();
+    await Promise.all([
+      loadRooms().catch(e => console.warn('rooms:', e)),
+      loadEvents().catch(e => console.warn('events:', e)),
+      loadWellness().catch(e => console.warn('wellness:', e)),
+      loadShift().catch(e => console.warn('shift:', e)),
+    ]);
+    cleanOldEvents().catch(() => {});
   } catch (e) {
-    toast('⚠️ Kapcsolódási hiba – ellenőrizd a Supabase adatokat!');
-    console.error(e);
-  } finally {
-    setLoading(false);
+    console.error('Init error:', e);
   }
+  // Always continue regardless of Supabase errors
+  updateDashboardStats();
+  renderEvents();
+  document.getElementById('evDate').value  = todayStr();
+  document.getElementById('qEvDate').value = todayStr();
+  setLoading(false);
+  try { initRealtime(); } catch(e) {}
 }
 
 init();
