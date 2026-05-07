@@ -862,15 +862,11 @@ async function importPrevio(input) {
   status.textContent = '⏳ Feldolgozás...';
 
   try {
-    // Read file as ArrayBuffer
     const buffer = await file.arrayBuffer();
     const data = new Uint8Array(buffer);
 
-    // Parse XLSX manually using a simple approach
-    // We'll use the SheetJS library loaded from CDN
     if (typeof XLSX === 'undefined') {
-      // Load SheetJS dynamically
-      await new Promise((resolve, reject) => {
+      await new Promise(function(resolve, reject) {
         const s = document.createElement('script');
         s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
         s.onload = resolve; s.onerror = reject;
@@ -885,109 +881,135 @@ async function importPrevio(input) {
     // Find header row
     let headerIdx = -1;
     for (let i = 0; i < rows.length; i++) {
-      if (rows[i] && rows[i].some(c => String(c).includes('Szoba'))) {
+      if (rows[i] && rows[i].some(function(c) { return String(c).includes('Szoba'); })) {
         headerIdx = i; break;
       }
     }
     if (headerIdx === -1) { status.textContent = '⚠️ Nem találom a fejlécsort!'; return; }
 
-    const headers = rows[headerIdx].map(h => String(h || '').trim());
-    const colKezdet     = headers.findIndex(h => h.includes('Kezdet'));
-    const colVege       = headers.findIndex(h => h.includes('Vége'));
-    const colSzoba      = headers.findIndex(h => h.includes('Szoba'));
-    const colAllapot    = headers.findIndex(h => h.includes('Állapot') || h.includes('Allapot'));
-    const colKapcsolat  = headers.findIndex(h => h.includes('Kapcsolattartó') || h.includes('Kapcsolat'));
-    const colFo         = headers.findIndex(h => h.includes('Résztvevők') || h.includes('Resztvevok'));
+    const headers = rows[headerIdx].map(function(h) { return String(h || '').trim(); });
+    const colKezdet    = headers.findIndex(function(h) { return h.includes('Kezdet'); });
+    const colVege      = headers.findIndex(function(h) { return h.includes('Vége'); });
+    const colSzoba     = headers.findIndex(function(h) { return h.includes('Szoba'); });
+    const colKapcsolat = headers.findIndex(function(h) { return h.includes('Kapcsolattartó') || h.includes('Kapcsolat'); });
+    const colFo        = headers.findIndex(function(h) { return h.includes('Résztvevők') || h.includes('Resztvevok'); });
 
-    const today = todayStr();
+    const today    = todayStr();
     const tomorrow = tomorrowStr();
 
-    // Build room map from Previo rows
-    const previoMap = {}; // szobaNev -> { guest, checkin, checkout, guests, status }
+    // Parse date helper (format: "2026. 05. 07. 14:00")
+    function parseDate(str) {
+      const m = String(str).match(/(\d{4})\. (\d{2})\. (\d{2})/);
+      return m ? m[1] + '-' + m[2] + '-' + m[3] : '';
+    }
+
+    // Build map: roomName -> booking data
+    const previoMap = {};
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row || !row[colSzoba]) continue;
-      const szoba    = String(row[colSzoba] || '').trim();
-      const kezdet   = String(row[colKezdet] || '').trim();
-      const vege     = String(row[colVege] || '').trim();
-      const allapot  = String(row[colAllapot] || '').trim();
-      const vendeg   = String(row[colKapcsolat] || '').trim();
-      const fo       = parseInt(row[colFo]) || 2;
+      const szoba        = String(row[colSzoba] || '').trim();
+      const checkinDate  = parseDate(row[colKezdet]);
+      const checkoutDate = parseDate(row[colVege]);
+      const vendeg       = String(row[colKapcsolat] || '').trim();
+      const fo           = parseInt(row[colFo]) || 2;
+      if (!szoba || !checkinDate || !checkoutDate) continue;
 
-      if (!szoba) continue;
+      // Only include active bookings (checkin <= today < checkout)
+      if (checkinDate > today || checkoutDate < today) continue;
 
-      // Parse dates (format: "2026. 05. 07. 14:00")
-      const parseDate = str => {
-        const m = str.match(/(\d{4})\. (\d{2})\. (\d{2})/);
-        return m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+      let roomStatus = 'occupied';
+      if (checkinDate === today)  roomStatus = 'checkin';
+      if (checkoutDate === today) roomStatus = 'checkout';
+
+      previoMap[szoba] = {
+        vendeg, fo, checkinDate, checkoutDate, status: roomStatus
       };
-      const checkinDate  = parseDate(kezdet);
-      const checkoutDate = parseDate(vege);
-
-      // Determine status
-      let status = 'occupied';
-      if (checkinDate === today)    status = 'checkin';
-      if (checkoutDate === today)   status = 'checkout';
-      if (allapot === 'U' && checkinDate < today && checkoutDate > today) status = 'occupied';
-
-      previoMap[szoba] = { vendeg, checkinDate, checkoutDate, fo, status };
     }
 
-    // Match Previo room names to our rooms
-    // Previo: "Vadászház 1" → our building: kastely, name: "Vadászház 1"
-    const previoToOur = {
-      'Vadászház 1':  { id: 1 },  'Vadászház 2':  { id: 2 },
-      'Vadászház 11': { id: 3 },  'Vadászház 12': { id: 4 },
-      'Vadászház 14': { id: 5 },  'Vadászház 15': { id: 6 },
-      'Vadászház 16': { id: 7 },  'Vadászház 17': { id: 8 },
-      'Vadászház 21': { id: 9 },
-      'Parasztház 1': { id: 10 }, 'Parasztház 2': { id: 11 },
-      'Parasztház 3': { id: 12 }, 'Parasztház 4': { id: 13 },
-      'Parasztház 5': { id: 14 },
+    // Room name → DB id mapping
+    const nameToId = {
+      'Vadászház 1':1,'Vadászház 2':2,'Vadászház 11':3,'Vadászház 12':4,
+      'Vadászház 14':5,'Vadászház 15':6,'Vadászház 16':7,'Vadászház 17':8,
+      'Vadászház 21':9,'Parasztház 1':10,'Parasztház 2':11,
+      'Parasztház 3':12,'Parasztház 4':13,'Parasztház 5':14
     };
 
-    let updated = 0;
-    for (const [previoName, data] of Object.entries(previoMap)) {
-      const mapping = previoToOur[previoName];
-      if (!mapping) continue;
-      const room = STATE.rooms.find(r => r.id === mapping.id);
-      if (!room) continue;
-
-      // Update room
-      room.name    = previoName;
-      room.guests  = data.fo;
-      room.status  = data.status;
-      room.note    = data.vendeg ? `${data.vendeg} | ki: ${data.checkoutDate}` : room.note;
-
-      await updateRoomInDB(room.id, {
-        name:   room.name,
-        guests: room.guests,
-        status: room.status,
-        note:   room.note,
-      });
-      updated++;
+    // Build weekly schedule: roomId -> { [date]: status }
+    // Re-read ALL rows for weekly view (not just today)
+    const weeklyMap = {}; // roomId -> { checkinDate, checkoutDate, vendeg }
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[colSzoba]) continue;
+      const szoba        = String(row[colSzoba] || '').trim();
+      const checkinDate  = parseDate(row[colKezdet]);
+      const checkoutDate = parseDate(row[colVege]);
+      const vendeg       = String(row[colKapcsolat] || '').trim();
+      const fo           = parseInt(row[colFo]) || 2;
+      const id           = nameToId[szoba];
+      if (!id || !checkinDate || !checkoutDate) continue;
+      if (!weeklyMap[id]) weeklyMap[id] = [];
+      weeklyMap[id].push({ checkinDate, checkoutDate, vendeg, fo });
     }
 
-    // Update room names in DB for unmapped rooms too (reset to clean)
-    for (const [previoName, mapping] of Object.entries(previoToOur)) {
-      if (!previoMap[previoName]) {
-        const room = STATE.rooms.find(r => r.id === mapping.id);
-        if (room && room.status !== 'clean') {
-          // Don't reset if already has data
-        }
-        if (room) room.name = previoName;
+    // Update rooms in DB and STATE
+    let updated = 0;
+    let totalGuestsToday = 0;
+    let totalGuestsTomorrow = 0;
+
+    for (const [szoba, data] of Object.entries(previoMap)) {
+      const id = nameToId[szoba];
+      if (!id) continue;
+      const room = STATE.rooms.find(function(r) { return r.id === id; });
+      if (!room) continue;
+      room.guests       = data.fo;
+      room.status       = data.status;
+      room.checkin_date  = data.checkinDate;
+      room.checkout_date = data.checkoutDate;
+      room.note         = data.vendeg ? data.vendeg + ' | ki: ' + data.checkoutDate : room.note;
+      await updateRoomInDB(id, {
+        guests: room.guests, status: room.status, note: room.note,
+        checkin_date: data.checkinDate, checkout_date: data.checkoutDate
+      });
+      updated++;
+      // Count guests for today (occupied or checkin = breakfast)
+      if (data.status === 'occupied' || data.status === 'checkin') {
+        totalGuestsToday += data.fo;
+      }
+      // Count guests staying tomorrow (checkout tomorrow or later = dinner tonight)
+      if (data.checkoutDate > today) {
+        totalGuestsTomorrow += data.fo;
       }
     }
 
+    // Store weekly schedule in STATE for room week view
+    STATE.weeklyMap = weeklyMap;
+
+    // Update breakfast/dinner counts automatically
+    const reggeliEl = document.getElementById('statReggeli');
+    const vacsoraEl = document.getElementById('statVacsora');
+    if (reggeliEl) reggeliEl.value = totalGuestsToday;
+    if (vacsoraEl) vacsoraEl.value = totalGuestsTomorrow;
+
+    // Reset non-imported rooms to clean
+    STATE.rooms.forEach(function(room) {
+      if (!previoMap[room.name]) {
+        room.status = 'clean';
+        room.checkin_date = '';
+        room.checkout_date = '';
+      }
+    });
+
     renderRooms('all');
+    renderRoomWeek();
     updateDashboardStats();
-    status.textContent = `✅ ${updated} szoba frissítve a Previo adatokból!`;
-    toast(`✅ Previo import kész – ${updated} szoba frissítve!`);
+    status.textContent = '✅ ' + updated + ' szoba frissítve | Reggeli: ' + totalGuestsToday + ' fő | Vacsora: ' + totalGuestsTomorrow + ' fő';
+    toast('✅ Previo import kész!');
 
   } catch(e) {
     console.error(e);
     status.textContent = '⚠️ Hiba: ' + e.message;
-    toast('⚠️ Import hiba – ellenőrizd a fájlt!');
+    toast('⚠️ Import hiba!');
   }
 }
 
@@ -1522,48 +1544,52 @@ function renderRoomWeek() {
   const cont = document.getElementById('roomWeekView');
   if (!cont) return;
   const today = new Date();
-  // Build 7 days starting today
-  const days = Array.from({length:7}, (_,i) => {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    return d.toISOString().slice(0,10);
-  });
-  const dayLabels = ['H','K','Sze','Cs','P','Szo','V'];
+    days.push(d.toISOString().slice(0,10));
+  }
+  const dowNames = ['V','H','K','Sze','Cs','P','Szo'];
+  const weeklyMap = STATE.weeklyMap || {};
 
-  // Header
-  let html = `<table style="width:100%;border-collapse:collapse;font-size:10px">
-    <thead><tr>
-      <th style="padding:8px 6px;background:var(--parchment);text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--stone);position:sticky;left:0;min-width:80px">Szoba</th>`;
-  days.forEach((d,i) => {
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:10px;min-width:320px"><thead><tr>'
+    + '<th style="padding:8px 6px;background:var(--parchment);text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--stone);min-width:80px;position:sticky;left:0">Szoba</th>';
+
+  days.forEach(function(d) {
     const dow = new Date(d).getDay();
-    const isWeekend = dow === 0 || dow === 6;
-    const isToday   = d === todayStr();
-    html += `<th style="padding:8px 4px;background:${isToday?'var(--gold)':'var(--parchment)'};text-align:center;min-width:36px;color:${isToday?'var(--ink)':isWeekend?'var(--red)':'var(--stone)'}">
-      ${d.slice(8)}<br><span style="font-weight:400">${['V','H','K','Sze','Cs','P','Szo'][dow]}</span>
-    </th>`;
+    const isW = dow === 0 || dow === 6;
+    const isT = d === todayStr();
+    html += '<th style="padding:6px 4px;background:' + (isT ? 'var(--gold)' : 'var(--parchment)') + ';text-align:center;min-width:38px;color:' + (isT ? 'var(--ink)' : isW ? 'var(--red)' : 'var(--stone)') + ';font-size:9px">'
+          + d.slice(8) + '<br><span style="font-weight:400">' + dowNames[dow] + '</span></th>';
   });
   html += '</tr></thead><tbody>';
 
-  // Rows
-  STATE.rooms.forEach(r => {
-    html += `<tr>
-      <td style="padding:6px;background:var(--white);font-weight:600;font-size:10px;color:var(--forest);position:sticky;left:0;border-bottom:1px solid var(--parchment)">${r.name}</td>`;
-    days.forEach(d => {
-      // Check if room has a note with this date (from Previo import)
-      const hasCheckout = r.status === 'checkout' && d === todayStr();
-      const hasCheckin  = r.status === 'checkin'  && d === todayStr();
-      const isOccupied  = r.status === 'occupied';
+  STATE.rooms.forEach(function(r) {
+    const bookings = weeklyMap[r.id] || [];
+    html += '<tr><td style="padding:5px 6px;background:var(--white);font-weight:600;font-size:10px;color:var(--forest);border-bottom:1px solid var(--parchment);position:sticky;left:0">' + r.name + '</td>';
+
+    days.forEach(function(d) {
+      // Find booking that covers this day
       let bg = 'var(--white)', label = '', color = 'var(--ink)';
-      if (d === todayStr()) {
-        if (hasCheckout) { bg='#fce4ec'; label='Ki'; color='var(--red)'; }
-        else if (hasCheckin) { bg='#fff8e1'; label='Be'; color='#f57f17'; }
-        else if (isOccupied) { bg='#e3f2fd'; label='●'; color='#1565c0'; }
+      const booking = bookings.find(function(b) {
+        return b.checkinDate <= d && b.checkoutDate > d;
+      });
+      if (booking) {
+        if (booking.checkinDate === d)  { bg = '#fff8e1'; label = 'Be'; color = '#f57f17'; }
+        else if (booking.checkoutDate === d) { bg = '#fce4ec'; label = 'Ki'; color = 'var(--red)'; }
+        else { bg = '#e3f2fd'; label = '●'; color = '#1565c0'; }
       }
-      html += `<td style="padding:4px 2px;background:${bg};text-align:center;border-bottom:1px solid var(--parchment);border-left:1px solid var(--parchment);font-size:9px;font-weight:700;color:${color}">${label}</td>`;
+      // Also check current room status for today if no weeklyMap data
+      if (!booking && d === todayStr()) {
+        if (r.status === 'checkout')      { bg = '#fce4ec'; label = 'Ki'; color = 'var(--red)'; }
+        else if (r.status === 'checkin')  { bg = '#fff8e1'; label = 'Be'; color = '#f57f17'; }
+        else if (r.status === 'occupied') { bg = '#e3f2fd'; label = '●'; color = '#1565c0'; }
+      }
+      html += '<td style="padding:4px 2px;background:' + bg + ';text-align:center;border-bottom:1px solid var(--parchment);border-left:1px solid var(--parchment);font-size:10px;font-weight:700;color:' + color + '">' + label + '</td>';
     });
     html += '</tr>';
   });
-
   html += '</tbody></table>';
   cont.innerHTML = html;
 }
