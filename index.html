@@ -290,6 +290,22 @@ body {
 }
 .shift-save:hover { background: rgba(255,255,255,.2); }
 
+/* ── CALENDAR TAB ──────────────────────────────────── */
+.week-header { display:grid; grid-template-columns: 60px repeat(7,1fr); gap:2px; margin-bottom:4px; }
+.week-day { text-align:center; font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--stone); padding:6px 2px; }
+.week-day.today { color:var(--moss); background:rgba(45,110,48,.08); border-radius:6px; }
+.week-row { display:grid; grid-template-columns: 60px repeat(7,1fr); gap:2px; margin-bottom:2px; align-items:start; }
+.week-room-label { font-size:9px; font-weight:700; color:var(--bark); padding:6px 4px; line-height:1.2; }
+.week-cell { min-height:32px; border-radius:6px; padding:2px; position:relative; }
+.week-cell.occupied { background:var(--forest-mid); }
+.week-cell.checkin  { background:#f57f17; }
+.week-cell.checkout { background:var(--red); }
+.week-cell.clean    { background:rgba(0,0,0,.04); }
+.week-cell-label { font-size:8px; color:rgba(255,255,255,.85); padding:2px 3px; line-height:1.2; font-weight:600; overflow:hidden; }
+.week-legend { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.week-legend-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--stone); }
+.week-legend-dot { width:10px; height:10px; border-radius:3px; }
+
 /* ── TOAST ─────────────────────────────────────────── */
 .toast {
   position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%; transform: translateX(-50%) translateY(20px);
@@ -558,10 +574,10 @@ hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 
 </main>
 
 <!-- BOTTOM NAV -->
-<nav class="nav">
+<nav class="nav" style="--nav-btn-fs:7.5px">
   <button class="nav-btn active" id="nav-dashboard" onclick="showTab('dashboard')">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-    Dashboard
+    Főoldal
   </button>
   <button class="nav-btn" id="nav-rooms" onclick="showTab('rooms')">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
@@ -571,9 +587,13 @@ hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg>
     Wellness
   </button>
-  <button class="nav-btn" id="nav-events" onclick="showTab('events')">
+  <button class="nav-btn" id="nav-calendar" onclick="showTab('calendar')">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
-    Rendezvény
+    Naptár
+  </button>
+  <button class="nav-btn" id="nav-events" onclick="showTab('events')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    Rögzítés
   </button>
 </nav>
 
@@ -688,6 +708,7 @@ function showTab(id) {
   if (id === 'rooms')     renderRooms('all');
   if (id === 'dashboard') renderEvents();
   if (id === 'wellness')  renderWellness();
+  if (id === 'calendar')  { renderWeekCalendar(); renderCalEvents('all'); }
 }
 
 // ── TOAST ────────────────────────────────────────────────────────────────────
@@ -967,27 +988,62 @@ async function loadEvents() {
 function renderEvents() {
   const list = document.getElementById('eventList');
   const today = todayStr(), tomorrow = tomorrowStr();
-  const sorted = [...STATE.events].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  // Only show next 7 days on dashboard
+  const in7days = new Date(); in7days.setDate(in7days.getDate() + 7);
+  const limit = in7days.toISOString().slice(0,10);
+  const sorted = [...STATE.events]
+    .filter(ev => ev.date >= today && ev.date <= limit)
+    .sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
   if (!sorted.length) {
-    list.innerHTML = '<p style="color:var(--stone);font-size:13px;text-align:center;padding:20px 0">Nincsenek közelgő események</p>';
+    list.innerHTML = '<p style="color:var(--stone);font-size:13px;text-align:center;padding:20px 0">Nincs esemény a következő 7 napban</p>';
     return;
   }
-  list.innerHTML = sorted.map(ev => {
-    let urgency = 'upcoming', badge = ev.date;
-    if (ev.date === today)    { urgency = 'urgent'; badge = 'MA'; }
-    else if (ev.date === tomorrow) { urgency = 'soon'; badge = 'HOLNAP'; }
-    return `<div class="event-card ${urgency}">
-      <div style="flex:1">
-        <span class="event-badge ${urgency}">${badge} ${ev.time}</span>
-        <div class="event-name">${ev.type}</div>
-        <div class="event-meta">${ev.place} · ${ev.count} fő</div>
-        ${ev.note ? `<div class="event-meta" style="margin-top:4px;font-style:italic">${ev.note}</div>` : ''}
+  list.innerHTML = sorted.map(ev => eventCardHTML(ev, true)).join('');
+}
+
+function eventCardHTML(ev, showDelete) {
+  const today = todayStr(), tomorrow = tomorrowStr();
+  let urgency = 'upcoming', badge = ev.date;
+  if (ev.date === today)         { urgency = 'urgent'; badge = 'MA'; }
+  else if (ev.date === tomorrow) { urgency = 'soon';   badge = 'HOLNAP'; }
+  else {
+    const d = new Date(ev.date);
+    badge = d.toLocaleDateString('hu-HU', {month:'short', day:'numeric'});
+  }
+  return `<div class="event-card ${urgency}">
+    <div style="flex:1">
+      <span class="event-badge ${urgency}">${badge} ${ev.time}</span>
+      <div class="event-name">${ev.type}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:7px 8px">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Helyszín</div>
+          <div style="font-size:12px;font-weight:600;color:var(--forest)">${ev.place}</div>
+        </div>
+        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:7px 8px">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Létszám</div>
+          <div style="font-size:12px;font-weight:600;color:var(--forest)">${ev.count} fő</div>
+        </div>
+        ${ev.catering && ev.catering !== 'Nincs catering' ? `
+        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:7px 8px;grid-column:1/-1">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div>
+          <div style="font-size:12px;color:var(--ink)">${ev.catering}</div>
+        </div>` : ''}
+        ${ev.note ? `
+        <div style="background:rgba(201,150,30,.08);border-radius:8px;padding:7px 8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div>
+          <div style="font-size:12px;color:var(--ink);font-style:italic">${ev.note}</div>
+        </div>` : ''}
+        ${ev.takeaway ? `
+        <div style="background:#fff8e1;border-radius:8px;padding:7px 8px;grid-column:1/-1;border:1px solid #ffe082">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div>
+          <div style="font-size:12px;color:var(--ink)">${ev.takeaway_time||''} ${ev.takeaway_who ? '– '+ev.takeaway_who : ''}</div>
+        </div>` : ''}
       </div>
-      <button class="event-edit" onclick="deleteEvent(${ev.id})" title="Törlés">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
-      </button>
-    </div>`;
-  }).join('');
+    </div>
+    ${showDelete ? `<button class="event-edit" onclick="deleteEvent(${ev.id})" title="Törlés" style="align-self:flex-start;margin-left:8px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+    </button>` : ''}
+  </div>`;
 }
 
 async function deleteEvent(id) {
@@ -1234,12 +1290,154 @@ function initRealtime() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// NAPTÁR
+// ════════════════════════════════════════════════════════════════════════════
+function getWeekDates() {
+  const dates = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(d.toISOString().slice(0,10));
+  }
+  return dates;
+}
+
+function renderWeekCalendar() {
+  const cal = document.getElementById('weekCalendar');
+  const dates = getWeekDates();
+  const today = todayStr();
+  const dayNames = ['V','H','K','Sze','Cs','P','Szo'];
+
+  // Header
+  let html = '<div class="week-header">';
+  html += '<div class="week-day"></div>';
+  dates.forEach(d => {
+    const dn = new Date(d);
+    const name = dayNames[dn.getDay()];
+    const num  = dn.getDate();
+    const isToday = d === today;
+    html += `<div class="week-day${isToday?' today':''}">${name}<br><strong>${num}</strong></div>`;
+  });
+  html += '</div>';
+
+  // Room rows
+  STATE.rooms.forEach(r => {
+    html += '<div class="week-row">';
+    html += `<div class="week-room-label">${r.name.replace('Vadászház','V').replace('Parasztház','P')}</div>`;
+    dates.forEach(d => {
+      // Check if room has info for this date from note
+      let status = 'clean';
+      let label = '';
+      if (r.note && r.note.includes('ki:')) {
+        const checkoutMatch = r.note.match(/ki: (\d{4}-\d{2}-\d{2})/);
+        if (checkoutMatch) {
+          const checkout = checkoutMatch[1];
+          // Estimate checkin from status
+          if (d < checkout && d >= today) status = 'occupied';
+          if (d === checkout) { status = 'checkout'; label = 'Ki'; }
+        }
+      }
+      if (d === today && r.status === 'checkin')  { status = 'checkin';  label = 'Be'; }
+      if (d === today && r.status === 'checkout') { status = 'checkout'; label = 'Ki'; }
+      if (d === today && r.status === 'occupied') { status = 'occupied'; }
+      html += `<div class="week-cell ${status}">${label ? `<div class="week-cell-label">${label}</div>` : ''}</div>`;
+    });
+    html += '</div>';
+  });
+
+  cal.innerHTML = html;
+}
+
+function renderCalEvents(filter) {
+  const list = document.getElementById('calEventList');
+  const today = todayStr();
+  let events = [...STATE.events].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+
+  if (filter === 'week') {
+    const in7 = new Date(); in7.setDate(in7.getDate()+7);
+    events = events.filter(ev => ev.date >= today && ev.date <= in7.toISOString().slice(0,10));
+  } else if (filter === 'month') {
+    const in30 = new Date(); in30.setDate(in30.getDate()+30);
+    events = events.filter(ev => ev.date >= today && ev.date <= in30.toISOString().slice(0,10));
+  }
+
+  if (!events.length) {
+    list.innerHTML = '<p style="color:var(--stone);font-size:13px;text-align:center;padding:16px 0">Nincs esemény ebben az időszakban</p>';
+    return;
+  }
+  list.innerHTML = events.map(ev => eventCardHTML(ev, true)).join('');
+}
+
+function filterCalEvents(filter, btn) {
+  document.querySelectorAll('#calEventFilter .btn-sm').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCalEvents(filter);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// AUTO-TÖRLÉS (60 nap után)
+// ════════════════════════════════════════════════════════════════════════════
+async function autoDeleteOldEvents() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 60);
+  const cutoffStr = cutoff.toISOString().slice(0,10);
+  try {
+    await sbFetch(`/events?date=lt.${cutoffStr}`, { method: 'DELETE' });
+    STATE.events = STATE.events.filter(e => e.date >= cutoffStr);
+  } catch(e) { console.log('Auto-delete skipped:', e.message); }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MŰSZAKÁTADÓ – javított mentés
+// ════════════════════════════════════════════════════════════════════════════
+async function saveShift() {
+  const message = document.getElementById('shiftNote').value.trim();
+  if (!message) { toast('⚠️ Írj be valamit az átadóba!'); return; }
+  try {
+    await sbFetch('/shift', {
+      method: 'POST',
+      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ id: 1, message, updated_at: new Date().toISOString() })
+    });
+    STATE.shift = message;
+    toast('✅ Műszakátadó elmentve!');
+    // Visual feedback - green border
+    const ta = document.getElementById('shiftNote');
+    ta.style.borderColor = 'var(--gold-light)';
+    setTimeout(() => ta.style.borderColor = '', 2000);
+  } catch(e) {
+    toast('⚠️ Mentés sikertelen – ellenőrizd a kapcsolatot!');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MODAL EVENTS – frissített renderModalEvents (eventCardHTML alapú)
+// ════════════════════════════════════════════════════════════════════════════
+function renderModalEvents() {
+  const list = document.getElementById('modalEventList');
+  if (!list) return;
+  const today = todayStr();
+  const in7 = new Date(); in7.setDate(in7.getDate()+7);
+  const limit = in7.toISOString().slice(0,10);
+  const sorted = [...STATE.events]
+    .filter(ev => ev.date >= today && ev.date <= limit)
+    .sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  if (!sorted.length) {
+    list.innerHTML = '<p style="color:var(--stone);font-size:12px;text-align:center;padding:8px 0">Nincs esemény a következő 7 napban</p>';
+    return;
+  }
+  list.innerHTML = sorted.map(ev => eventCardHTML(ev, true)).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════════════════════
 async function init() {
   setLoading(true);
   try {
     await Promise.all([loadRooms(), loadEvents(), loadWellness(), loadShift()]);
+    await autoDeleteOldEvents();
     updateDashboardStats();
     renderEvents();
     initRealtime();
