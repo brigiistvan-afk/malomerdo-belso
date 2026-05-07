@@ -616,8 +616,8 @@ hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 
 // ══════════════════════════════════════════════════════════════════════════════
 // ⚙️  SUPABASE KONFIGURÁCIÓ – ide írd be a saját adataidat!
 // ══════════════════════════════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://XXXXXXXXXXXXX.supabase.co';   // ← Project URL
-const SUPABASE_KEY = 'eyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';   // ← anon public key
+const SUPABASE_URL = 'https://ztrrsewqikflamuncurh.supabase.co';   // ← Project URL
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0cnJzZXdxaWtmbGFtdW5jdXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0ODgyMDIsImV4cCI6MjA5MzA2NDIwMn0.oKRz_se7P5wl6cYJ-V7w8ee0i2N5hFsNv90G2BhKHxw';   // ← anon public key
 // ══════════════════════════════════════════════════════════════════════════════
 
 const API = `${SUPABASE_URL}/rest/v1`;
@@ -711,6 +711,10 @@ function renderRooms(filter) {
   const paraszthaz = STATE.rooms.filter(r => r.building === 'paraszthaz');
   function rHTML(r) {
     if (filter !== 'all' && r.status !== filter) return '';
+    const isCheckout = r.status === 'checkout';
+    const cleaning = r.cleaning || 'normal';
+    const cleanNormal = cleaning==='normal' ? 'background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7' : 'background:var(--cream);color:var(--stone);border-color:rgba(0,0,0,.1)';
+    const cleanDeep   = cleaning==='deep'   ? 'background:#fce4ec;color:#c62828;border-color:#ef9a9a' : 'background:var(--cream);color:var(--stone);border-color:rgba(0,0,0,.1)';
     return `<div class="room-card" id="rc-${r.id}">
       <div class="room-header">
         <div>
@@ -728,6 +732,10 @@ function renderRooms(filter) {
           <option value="occupied" ${r.status==='occupied'?'selected':''}>🔵 Foglalt</option>
         </select>
       </div>
+      ${isCheckout ? `<div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="setClean(${r.id},'normal')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;${cleanNormal}">🧹 Sima takarítás</button>
+        <button onclick="setClean(${r.id},'deep')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;${cleanDeep}">🧽 Végtakarítás</button>
+      </div>` : ''}
       <textarea class="room-note" placeholder="Szobaasszony megjegyzése..."
         onblur="updateRoom(${r.id},'note',this.value)">${r.note || ''}</textarea>
     </div>`;
@@ -736,6 +744,16 @@ function renderRooms(filter) {
     `<div class="building-label">🏰 Vadászkastély (1–9. szoba)</div>` + kastely.map(rHTML).join('') +
     `<div class="building-label">🏡 Parasztház (10–14. szoba)</div>`   + paraszthaz.map(rHTML).join('');
   updateDashboardStats();
+}
+
+async function setClean(id, type) {
+  const r = STATE.rooms.find(r => r.id === id);
+  if (!r) return;
+  r.cleaning = type;
+  await updateRoomInDB(id, { cleaning: type });
+  renderRooms(document.querySelector('.filter-row .btn-sm.active')?.textContent.trim() === 'Mind' ? 'all' :
+    document.querySelector('.filter-row .btn-sm.active')?.dataset?.filter || 'all');
+  toast(type === 'deep' ? '🧽 Végtakarítás jelölve' : '🧹 Sima takarítás jelölve');
 }
 
 async function updateRoom(id, key, val) {
