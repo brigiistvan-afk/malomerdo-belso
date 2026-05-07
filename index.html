@@ -396,7 +396,20 @@ hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 
   <!-- ── SZOBÁK ─────────────────────────────────────── -->
   <section id="tab-rooms" class="tab">
 
-    <div class="info-box">
+    <!-- Previo Import -->
+<div style="background:linear-gradient(135deg,var(--forest) 0%,var(--forest-mid) 100%);border-radius:16px;padding:16px;margin-bottom:14px;color:var(--cream)">
+  <div style="font-family:var(--ff-serif);font-size:16px;color:var(--gold-light);margin-bottom:4px">📥 Previo import</div>
+  <div style="font-size:11px;opacity:.6;margin-bottom:12px">Previo → Foglalások áttekintése → XLS export → feltöltés ide</div>
+  <label style="display:block;border:2px dashed rgba(255,255,255,.25);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:.2s" id="previoUploadLabel">
+    <div style="font-size:22px;margin-bottom:4px">📊</div>
+    <div style="font-size:12px;font-weight:600">Previo XLS feltöltése</div>
+    <div style="font-size:10px;opacity:.5;margin-top:2px">Automatikusan frissíti a szobákat</div>
+    <input type="file" id="previoFile" accept=".xlsx,.xls" style="display:none" onchange="importPrevio(this)">
+  </label>
+  <div id="previoStatus" style="font-size:11px;margin-top:10px;text-align:center;opacity:.7"></div>
+</div>
+
+<div class="info-box">
       <span style="font-size:18px">ℹ️</span>
       <p>A mai rendezvény helyszínét (Étterem) <strong>13:00-ig</strong> ellenőrizni kell!</p>
     </div>
@@ -687,8 +700,20 @@ async function loadRooms() {
   } else {
     // Első indítás: alapértelmezett szobák létrehozása
     const defaults = [
-      ...Array.from({length:9}, (_,i) => ({ id:i+1, building:'kastely',    name:`${i+1}. szoba`,  guests:2, status:'clean', note:'' })),
-      ...Array.from({length:5}, (_,i) => ({ id:i+10, building:'paraszthaz', name:`${i+10}. szoba`, guests:2, status:'clean', note:'' })),
+      { id:1,  building:'kastely',    name:'Vadászház 1',  guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:2,  building:'kastely',    name:'Vadászház 2',  guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:3,  building:'kastely',    name:'Vadászház 11', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:4,  building:'kastely',    name:'Vadászház 12', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:5,  building:'kastely',    name:'Vadászház 14', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:6,  building:'kastely',    name:'Vadászház 15', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:7,  building:'kastely',    name:'Vadászház 16', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:8,  building:'kastely',    name:'Vadászház 17', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:9,  building:'kastely',    name:'Vadászház 21', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:10, building:'paraszthaz', name:'Parasztház 1', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:11, building:'paraszthaz', name:'Parasztház 2', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:12, building:'paraszthaz', name:'Parasztház 3', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:13, building:'paraszthaz', name:'Parasztház 4', guests:2, status:'clean', note:'', cleaning:'normal' },
+      { id:14, building:'paraszthaz', name:'Parasztház 5', guests:2, status:'clean', note:'', cleaning:'normal' },
     ];
     const inserted = await sbFetch('/rooms', {
       method: 'POST',
@@ -744,6 +769,145 @@ function renderRooms(filter) {
     `<div class="building-label">🏰 Vadászkastély (1–9. szoba)</div>` + kastely.map(rHTML).join('') +
     `<div class="building-label">🏡 Parasztház (10–14. szoba)</div>`   + paraszthaz.map(rHTML).join('');
   updateDashboardStats();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PREVIO IMPORT
+// ════════════════════════════════════════════════════════════════════════════
+async function importPrevio(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const status = document.getElementById('previoStatus');
+  status.textContent = '⏳ Feldolgozás...';
+
+  try {
+    // Read file as ArrayBuffer
+    const buffer = await file.arrayBuffer();
+    const data = new Uint8Array(buffer);
+
+    // Parse XLSX manually using a simple approach
+    // We'll use the SheetJS library loaded from CDN
+    if (typeof XLSX === 'undefined') {
+      // Load SheetJS dynamically
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
+
+    // Find header row
+    let headerIdx = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i] && rows[i].some(c => String(c).includes('Szoba'))) {
+        headerIdx = i; break;
+      }
+    }
+    if (headerIdx === -1) { status.textContent = '⚠️ Nem találom a fejlécsort!'; return; }
+
+    const headers = rows[headerIdx].map(h => String(h || '').trim());
+    const colKezdet     = headers.findIndex(h => h.includes('Kezdet'));
+    const colVege       = headers.findIndex(h => h.includes('Vége'));
+    const colSzoba      = headers.findIndex(h => h.includes('Szoba'));
+    const colAllapot    = headers.findIndex(h => h.includes('Állapot') || h.includes('Allapot'));
+    const colKapcsolat  = headers.findIndex(h => h.includes('Kapcsolattartó') || h.includes('Kapcsolat'));
+    const colFo         = headers.findIndex(h => h.includes('Résztvevők') || h.includes('Resztvevok'));
+
+    const today = todayStr();
+    const tomorrow = tomorrowStr();
+
+    // Build room map from Previo rows
+    const previoMap = {}; // szobaNev -> { guest, checkin, checkout, guests, status }
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[colSzoba]) continue;
+      const szoba    = String(row[colSzoba] || '').trim();
+      const kezdet   = String(row[colKezdet] || '').trim();
+      const vege     = String(row[colVege] || '').trim();
+      const allapot  = String(row[colAllapot] || '').trim();
+      const vendeg   = String(row[colKapcsolat] || '').trim();
+      const fo       = parseInt(row[colFo]) || 2;
+
+      if (!szoba) continue;
+
+      // Parse dates (format: "2026. 05. 07. 14:00")
+      const parseDate = str => {
+        const m = str.match(/(\d{4})\. (\d{2})\. (\d{2})/);
+        return m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+      };
+      const checkinDate  = parseDate(kezdet);
+      const checkoutDate = parseDate(vege);
+
+      // Determine status
+      let status = 'occupied';
+      if (checkinDate === today)    status = 'checkin';
+      if (checkoutDate === today)   status = 'checkout';
+      if (allapot === 'U' && checkinDate < today && checkoutDate > today) status = 'occupied';
+
+      previoMap[szoba] = { vendeg, checkinDate, checkoutDate, fo, status };
+    }
+
+    // Match Previo room names to our rooms
+    // Previo: "Vadászház 1" → our building: kastely, name: "Vadászház 1"
+    const previoToOur = {
+      'Vadászház 1':  { id: 1 },  'Vadászház 2':  { id: 2 },
+      'Vadászház 11': { id: 3 },  'Vadászház 12': { id: 4 },
+      'Vadászház 14': { id: 5 },  'Vadászház 15': { id: 6 },
+      'Vadászház 16': { id: 7 },  'Vadászház 17': { id: 8 },
+      'Vadászház 21': { id: 9 },
+      'Parasztház 1': { id: 10 }, 'Parasztház 2': { id: 11 },
+      'Parasztház 3': { id: 12 }, 'Parasztház 4': { id: 13 },
+      'Parasztház 5': { id: 14 },
+    };
+
+    let updated = 0;
+    for (const [previoName, data] of Object.entries(previoMap)) {
+      const mapping = previoToOur[previoName];
+      if (!mapping) continue;
+      const room = STATE.rooms.find(r => r.id === mapping.id);
+      if (!room) continue;
+
+      // Update room
+      room.name    = previoName;
+      room.guests  = data.fo;
+      room.status  = data.status;
+      room.note    = data.vendeg ? `${data.vendeg} | ki: ${data.checkoutDate}` : room.note;
+
+      await updateRoomInDB(room.id, {
+        name:   room.name,
+        guests: room.guests,
+        status: room.status,
+        note:   room.note,
+      });
+      updated++;
+    }
+
+    // Update room names in DB for unmapped rooms too (reset to clean)
+    for (const [previoName, mapping] of Object.entries(previoToOur)) {
+      if (!previoMap[previoName]) {
+        const room = STATE.rooms.find(r => r.id === mapping.id);
+        if (room && room.status !== 'clean') {
+          // Don't reset if already has data
+        }
+        if (room) room.name = previoName;
+      }
+    }
+
+    renderRooms('all');
+    updateDashboardStats();
+    status.textContent = `✅ ${updated} szoba frissítve a Previo adatokból!`;
+    toast(`✅ Previo import kész – ${updated} szoba frissítve!`);
+
+  } catch(e) {
+    console.error(e);
+    status.textContent = '⚠️ Hiba: ' + e.message;
+    toast('⚠️ Import hiba – ellenőrizd a fájlt!');
+  }
 }
 
 async function setClean(id, type) {
