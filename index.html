@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Malomerdő – Belső Rendszer</title>
+
+<!-- PWA & Icons -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d2b0e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Malomerdő">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --forest:    #0d2b0e;
+  --forest-mid:#1a4a1c;
+  --moss:      #2d6e30;
+  --leaf:      #4a9e4e;
+  --gold:      #c9961e;
+  --gold-light:#e8b84b;
+  --cream:     #f5f0e4;
+  --parchment: #ede5cc;
+  --bark:      #5c3a1e;
+  --stone:     #8a8070;
+  --white:     #fdfaf3;
+  --red:       #c0392b;
+  --orange:    #d4692a;
+  --blue:      #2563a8;
+  --ink:       #1a1a14;
+  --shadow:    rgba(13,43,14,0.18);
+  --ff-serif:  'DM Serif Display', Georgia, serif;
+  --ff-sans:   'DM Sans', sans-serif;
+  --nav-h:     64px;
+  --header-h:  58px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--ff-sans);
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ────────────────────────────────────────── */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--header-h);
+  background: var(--forest);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 18px;
+  box-shadow: 0 2px 16px var(--shadow);
+}
+.header-brand { display: flex; flex-direction: column; }
+.header-brand h1 {
+  font-family: var(--ff-serif);
+  font-size: 19px; color: var(--cream); line-height: 1.1; letter-spacing: .3px;
+}
+.header-brand span {
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(245,240,228,.4); margin-top: 2px;
+}
+.header-date {
+  font-size: 11px; color: rgba(245,240,228,.6);
+  text-align: right; line-height: 1.4;
+}
+.header-date strong { display: block; font-size: 13px; color: var(--gold-light); font-weight: 500; }
+
+/* ── NAV ───────────────────────────────────────────── */
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: var(--nav-h);
+  background: var(--white);
+  border-top: 1px solid rgba(0,0,0,.08);
+  display: flex;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.08);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px;
+  border: none; background: none; cursor: pointer;
+  font-family: var(--ff-sans); font-size: 9px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--stone); transition: all .2s; padding: 8px 4px;
+  position: relative;
+}
+.nav-btn svg { width: 22px; height: 22px; transition: transform .2s; }
+.nav-btn.active { color: var(--forest-mid); }
+.nav-btn.active svg { transform: translateY(-2px); }
+.nav-btn.active::after {
+  content: ''; position: absolute; top: 0; left: 20%; right: 20%;
+  height: 3px; background: var(--moss); border-radius: 0 0 4px 4px;
+}
+.nav-btn:active { transform: scale(.95); }
+
+/* ── MAIN ──────────────────────────────────────────── */
+.main {
+  padding-top: calc(var(--header-h) + 16px);
+  padding-bottom: calc(var(--nav-h) + 20px);
+  padding-left: 16px; padding-right: 16px;
+  max-width: 560px; margin: 0 auto;
+}
+
+/* ── TABS ──────────────────────────────────────────── */
+.tab { display: none; animation: fadeIn .25s ease; }
+.tab.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* ── CARD ──────────────────────────────────────────── */
+.card {
+  background: var(--white); border-radius: 18px;
+  box-shadow: 0 2px 12px var(--shadow); padding: 20px;
+  margin-bottom: 14px; border: 1px solid rgba(255,255,255,.8);
+}
+.card-title {
+  font-family: var(--ff-serif); font-size: 18px;
+  color: var(--forest); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title svg { width: 20px; height: 20px; color: var(--moss); }
+
+/* ── SECTION LABEL ─────────────────────────────────── */
+.sec-label {
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--stone); font-weight: 600; margin: 20px 0 10px;
+}
+
+/* ── STAT CARDS ────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.stat-card {
+  background: var(--white); border-radius: 16px;
+  box-shadow: 0 2px 10px var(--shadow); padding: 16px;
+  position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card.yellow::before { background: var(--gold); }
+.stat-card.indigo::before { background: #4f46e5; }
+.stat-card.green::before  { background: var(--moss); }
+.stat-card.red::before    { background: var(--red); }
+.stat-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--stone); font-weight: 600; margin-bottom: 6px; }
+.stat-val { font-size: 28px; font-weight: 600; color: var(--ink); line-height: 1; }
+.stat-val input { font-size: 28px; font-weight: 600; color: var(--ink); width: 100%; border: none; background: none; outline: none; }
+.stat-sub { font-size: 10px; color: var(--stone); margin-top: 4px; }
+
+/* ── EVENT CARDS ───────────────────────────────────── */
+.event-card {
+  background: var(--white); border-radius: 16px;
+  box-shadow: 0 2px 10px var(--shadow); padding: 16px;
+  margin-bottom: 10px; border-left: 5px solid transparent;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.event-card.urgent { border-color: var(--red); }
+.event-card.soon { border-color: var(--orange); }
+.event-card.upcoming { border-color: var(--blue); }
+.event-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 20px; margin-bottom: 5px; display: inline-block;
+}
+.event-badge.urgent { background: #fde8e8; color: var(--red); }
+.event-badge.soon { background: #fde8d4; color: var(--orange); }
+.event-badge.upcoming { background: #dbeafe; color: var(--blue); }
+.event-name { font-family: var(--ff-serif); font-size: 17px; color: var(--ink); }
+.event-meta { font-size: 12px; color: var(--stone); margin-top: 3px; }
+.event-edit { background: none; border: none; cursor: pointer; padding: 6px; color: var(--stone); }
+.event-edit:hover { color: var(--moss); }
+
+/* ── WELLNESS SLOTS ────────────────────────────────── */
+.wellness-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wslot {
+  background: var(--cream); border-radius: 12px; padding: 10px 8px;
+  text-align: center; border: 1.5px solid transparent; cursor: pointer;
+  transition: all .2s; position: relative;
+}
+.wslot.free { border-color: rgba(45,110,48,.25); }
+.wslot.free:hover { border-color: var(--moss); background: #eef7ee; }
+.wslot.booked { background: var(--forest-mid); color: var(--cream); border-color: var(--forest-mid); }
+.wslot.booked .wslot-time { color: rgba(245,240,228,.7); }
+.wslot-time { font-size: 11px; font-weight: 600; color: var(--stone); }
+.wslot-label { font-size: 10px; margin-top: 3px; }
+.wslot.free .wslot-label { color: var(--moss); }
+.wslot.booked .wslot-label { color: var(--gold-light); }
+
+/* ── ROOM LIST ─────────────────────────────────────── */
+.building-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--bark); background: var(--parchment); border-radius: 8px;
+  padding: 6px 12px; margin: 16px 0 8px; display: flex; align-items: center; gap: 6px;
+}
+.room-card {
+  background: var(--white); border-radius: 14px;
+  box-shadow: 0 1px 6px var(--shadow); padding: 14px;
+  margin-bottom: 8px; border: 1.5px solid rgba(0,0,0,.05);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.room-header { display: flex; justify-content: space-between; align-items: center; }
+.room-name { font-weight: 700; font-size: 15px; color: var(--forest); }
+.room-guests { font-size: 11px; color: var(--stone); }
+.room-status-sel {
+  font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 20px;
+  border: 1.5px solid transparent; cursor: pointer; outline: none; background: var(--cream);
+  appearance: none; -webkit-appearance: none; text-align: center;
+}
+.room-status-sel[data-status="clean"]    { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+.room-status-sel[data-status="checkin"]  { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
+.room-status-sel[data-status="checkout"] { background: #fce4ec; color: #c62828; border-color: #ef9a9a; }
+.room-status-sel[data-status="occupied"] { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+.room-note {
+  width: 100%; padding: 8px 12px; font-family: var(--ff-sans); font-size: 12px;
+  background: var(--cream); border: 1.5px solid transparent; border-radius: 10px;
+  outline: none; resize: none; color: var(--ink);
+  transition: border-color .2s; min-height: 36px;
+}
+.room-note:focus { border-color: var(--leaf); }
+.room-note::placeholder { color: var(--stone); }
+
+/* ── FORM ELEMENTS ─────────────────────────────────── */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--stone); margin-bottom: 6px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 12px 14px; font-family: var(--ff-sans); font-size: 14px;
+  background: var(--cream); border: 1.5px solid rgba(0,0,0,.1); border-radius: 12px;
+  outline: none; color: var(--ink); transition: border-color .2s;
+  appearance: none; -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--moss); background: var(--white); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-divider { border: none; border-top: 1px solid rgba(0,0,0,.07); margin: 16px 0; }
+.checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; }
+.checkbox-row input { width: 18px; height: 18px; accent-color: var(--moss); cursor: pointer; }
+.checkbox-row label { font-size: 13px; font-weight: 600; color: var(--bark); cursor: pointer; }
+.photo-upload {
+  border: 2px dashed rgba(45,110,48,.3); border-radius: 14px;
+  background: rgba(45,110,48,.04); padding: 20px; text-align: center;
+  cursor: pointer; transition: all .2s; margin-bottom: 14px;
+}
+.photo-upload:hover { border-color: var(--moss); background: rgba(45,110,48,.08); }
+.photo-upload p { font-size: 12px; color: var(--moss); margin-top: 6px; font-weight: 500; }
+.photo-upload span { font-size: 10px; color: var(--stone); }
+
+/* ── BUTTONS ───────────────────────────────────────── */
+.btn {
+  display: block; width: 100%; padding: 15px; border: none; cursor: pointer;
+  font-family: var(--ff-sans); font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; border-radius: 14px;
+  transition: all .2s; text-align: center;
+}
+.btn-primary { background: var(--forest-mid); color: var(--cream); }
+.btn-primary:hover { background: var(--forest); transform: translateY(-1px); box-shadow: 0 6px 20px var(--shadow); }
+.btn-primary:active { transform: none; }
+.btn-sm {
+  display: inline-block; padding: 8px 16px; border: none; cursor: pointer;
+  font-family: var(--ff-sans); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; border-radius: 10px;
+  transition: all .2s; background: var(--parchment); color: var(--stone);
+}
+.btn-sm:hover { background: var(--parchment); color: var(--forest); }
+.btn-sm.active { background: var(--forest-mid); color: var(--cream); }
+
+/* ── SHIFT NOTE ────────────────────────────────────── */
+.shift-note {
+  background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%);
+  border-radius: 18px; padding: 20px; color: var(--cream); margin-bottom: 14px;
+}
+.shift-note h3 { font-family: var(--ff-serif); font-size: 17px; margin-bottom: 4px; color: var(--gold-light); }
+.shift-note p { font-size: 11px; opacity: .6; margin-bottom: 12px; }
+.shift-textarea {
+  width: 100%; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px; padding: 10px; color: var(--cream); font-family: var(--ff-sans);
+  font-size: 13px; resize: none; outline: none; min-height: 80px;
+}
+.shift-textarea::placeholder { color: rgba(245,240,228,.4); }
+.shift-save {
+  margin-top: 10px; padding: 10px; width: 100%; border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.12); color: var(--cream); border-radius: 10px;
+  font-family: var(--ff-sans); font-size: 11px; font-weight: 600; cursor: pointer;
+  letter-spacing: 1px; text-transform: uppercase; transition: all .2s;
+}
+.shift-save:hover { background: rgba(255,255,255,.2); }
+
+/* ── TOAST ─────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--forest); color: var(--cream); padding: 10px 20px;
+  border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: .5px;
+  opacity: 0; transition: all .3s; z-index: 200; white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── INFO BOX ──────────────────────────────────────── */
+.info-box {
+  background: rgba(37,99,168,.08); border: 1px solid rgba(37,99,168,.2);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.info-box p { font-size: 12px; color: #1e40af; line-height: 1.5; }
+
+/* ── FILTER ROW ────────────────────────────────────── */
+.filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; }
+.filter-row::-webkit-scrollbar { display: none; }
+
+/* ── DIVIDER ───────────────────────────────────────── */
+hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 0; }
+
+/* ── MODAL ─────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 300; display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--white); border-radius: 24px 24px 0 0; padding: 24px 20px;
+  width: 100%; max-width: 560px; max-height: 85dvh; overflow-y: auto;
+  transform: translateY(40px); transition: transform .3s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-handle { width: 40px; height: 4px; background: rgba(0,0,0,.12); border-radius: 2px; margin: 0 auto 20px; }
+.modal-title { font-family: var(--ff-serif); font-size: 22px; color: var(--forest); margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-brand">
+    <h1>Malomerdő Panzió</h1>
+    <span>Belső rendszer</span>
+  </div>
+  <div class="header-date">
+    <strong id="hTime"></strong>
+    <span id="hDate"></span>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ── DASHBOARD ─────────────────────────────────── -->
+  <section id="tab-dashboard" class="tab active">
+
+    <div class="stat-grid">
+      <div class="stat-card yellow">
+        <div class="stat-label">☀️ Reggeli</div>
+        <div class="stat-val"><input type="number" id="statReggeli" value="28" min="0" max="50"></div>
+        <div class="stat-sub">főre terítünk</div>
+      </div>
+      <div class="stat-card indigo">
+        <div class="stat-label">🌙 Vacsora</div>
+        <div class="stat-val"><input type="number" id="statVacsora" value="14" min="0" max="50"></div>
+        <div class="stat-sub">főre számítunk</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">🛏️ Foglalt szoba</div>
+        <div class="stat-val" id="statFoglalt">0</div>
+        <div class="stat-sub">/ 14 szoba</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">🔑 Kiköltözés ma</div>
+        <div class="stat-val" id="statKikol">0</div>
+        <div class="stat-sub">szoba takarítandó</div>
+      </div>
+    </div>
+
+    <p class="sec-label">Mai & közelgő programok</p>
+
+    <div id="eventList"></div>
+
+    <button class="btn btn-primary" onclick="openEventModal()">
+      + Új esemény rögzítése
+    </button>
+
+    <p class="sec-label" style="margin-top:22px">Műszakátadó üzenet</p>
+    <div class="shift-note">
+      <h3>Átadó feljegyzés</h3>
+      <p>Mentve jelenik meg a következő műszak számára</p>
+      <textarea class="shift-textarea" id="shiftNote" placeholder="Különleges kérések, vendégek megjegyzései, el nem intézett feladatok..."></textarea>
+      <button class="shift-save" onclick="saveShift()">Mentés & átadás</button>
+    </div>
+
+  </section>
+
+  <!-- ── SZOBÁK ─────────────────────────────────────── -->
+  <section id="tab-rooms" class="tab">
+
+    <div class="info-box">
+      <span style="font-size:18px">ℹ️</span>
+      <p>A mai rendezvény helyszínét (Étterem) <strong>13:00-ig</strong> ellenőrizni kell!</p>
+    </div>
+
+    <div class="filter-row">
+      <button class="btn-sm active" onclick="filterRooms('all', this)">Mind</button>
+      <button class="btn-sm" onclick="filterRooms('checkin', this)">🟡 Beköltözik</button>
+      <button class="btn-sm" onclick="filterRooms('checkout', this)">🔴 Kiköltözik</button>
+      <button class="btn-sm" onclick="filterRooms('clean', this)">🟢 Tiszta</button>
+      <button class="btn-sm" onclick="filterRooms('occupied', this)">🔵 Foglalt</button>
+    </div>
+
+    <div id="roomList"></div>
+
+  </section>
+
+  <!-- ── WELLNESS ───────────────────────────────────── -->
+  <section id="tab-wellness" class="tab">
+
+    <p class="sec-label">Jakuzzi – időpontok (09:00–21:00)</p>
+    <div class="card">
+      <div class="wellness-grid" id="jacuzziSlots"></div>
+    </div>
+
+    <p class="sec-label">Szauna – időpontok (09:00–21:00)</p>
+    <div class="card">
+      <div class="wellness-grid" id="saunaSlots"></div>
+    </div>
+
+    <p class="sec-label">Wellness foglalás rögzítése</p>
+    <div class="card">
+      <div class="form-group">
+        <label class="form-label">Vendég neve / szobaszám</label>
+        <input class="form-input" type="text" id="wGuestName" placeholder="pl. Kovács / 3. szoba">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Időpont</label>
+          <select class="form-select" id="wTime">
+            <option>09:00</option><option>10:00</option><option>11:00</option>
+            <option>12:00</option><option>13:00</option><option>14:00</option>
+            <option>15:00</option><option>16:00</option><option>17:00</option>
+            <option>18:00</option><option>19:00</option><option>20:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Létesítmény</label>
+          <select class="form-select" id="wType">
+            <option value="jacuzzi">Jakuzzi</option>
+            <option value="sauna">Szauna</option>
+            <option value="both">Mindkettő</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="bookWellness()">Foglalás rögzítése</button>
+    </div>
+
+  </section>
+
+  <!-- ── RENDEZVÉNY ─────────────────────────────────── -->
+  <section id="tab-events" class="tab">
+    <div class="card">
+      <div class="card-title">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+        Esemény rögzítése
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Rendezvény jellege</label>
+        <input class="form-input" type="text" id="evType" placeholder="pl. Esküvő, Konferencia, Születésnap">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Dátum</label>
+          <input class="form-input" type="date" id="evDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Időpont</label>
+          <input class="form-input" type="time" id="evTime">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Helyszín</label>
+          <select class="form-select" id="evPlace">
+            <option>Rendezvényház (80 fő)</option>
+            <option>Borospince (20 fő)</option>
+            <option>Étterem (30 fő)</option>
+            <option>Külső helyszín / Terasz</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Létszám (fő)</label>
+          <input class="form-input" type="number" id="evCount" placeholder="fő" min="1">
+        </div>
+      </div>
+
+      <hr class="gold">
+
+      <div class="form-group">
+        <label class="form-label">Catering igény</label>
+        <select class="form-select" id="evCatering">
+          <option>Nincs catering</option>
+          <option>Bekészítés (kávé, aprósütemény)</option>
+          <option>Tálak (sültes tál, hidegtál)</option>
+          <option>Teljes menüsor</option>
+          <option>Egyedi megbeszélés alapján</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Részletes leírás / speciális kérések</label>
+        <textarea class="form-textarea" id="evNote" placeholder="Gluténmentes igények, tálak összetétele, italok..."></textarea>
+      </div>
+
+      <div style="background:rgba(201,150,30,.08);border:1.5px solid rgba(201,150,30,.25);border-radius:14px;padding:14px;margin-bottom:14px">
+        <div class="checkbox-row">
+          <input type="checkbox" id="takeaway" onchange="toggleTakeaway()">
+          <label for="takeaway">🥡 Elvitelre kért tálak</label>
+        </div>
+        <div id="takeawayFields" style="display:none" class="form-row">
+          <div class="form-group">
+            <label class="form-label">Mikorra?</label>
+            <input class="form-input" type="time" id="evTakeawayTime">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ki viszi el?</label>
+            <input class="form-input" type="text" id="evTakeawayWho" placeholder="Név">
+          </div>
+        </div>
+      </div>
+
+      <div class="photo-upload" onclick="document.getElementById('evPhoto').click()">
+        <div style="font-size:28px">📷</div>
+        <p>Fotó csatolása</p>
+        <span>Kézzel írt vázlat, tálalási minta</span>
+        <input type="file" id="evPhoto" accept="image/*" capture="camera" style="display:none" onchange="photoSelected(this)">
+      </div>
+      <div id="photoPreview" style="display:none;margin-bottom:14px">
+        <img id="photoImg" style="width:100%;border-radius:12px;max-height:200px;object-fit:cover">
+      </div>
+
+      <button class="btn btn-primary" onclick="saveEvent()">Esemény mentése</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-dashboard" onclick="showTab('dashboard')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
+    Dashboard
+  </button>
+  <button class="nav-btn" id="nav-rooms" onclick="showTab('rooms')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+    Szobák
+  </button>
+  <button class="nav-btn" id="nav-wellness" onclick="showTab('wellness')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg>
+    Wellness
+  </button>
+  <button class="nav-btn" id="nav-events" onclick="showTab('events')">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+    Rendezvény
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+<!-- Loading overlay -->
+<div id="loadingOverlay" style="position:fixed;inset:0;background:var(--forest);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <div style="font-family:var(--ff-serif);font-size:28px;color:var(--cream);letter-spacing:.5px">Malomerdő</div>
+  <div style="width:40px;height:40px;border:3px solid rgba(245,240,228,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,228,.4)">Betöltés...</div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</div>
+
+<!-- EVENT MODAL (dashboard quick add) -->
+<div class="modal-overlay" id="eventModal" onclick="closeEventModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Gyors eseményrögzítés</div>
+    <div class="form-group">
+      <label class="form-label">Rendezvény neve</label>
+      <input class="form-input" type="text" id="qEvType" placeholder="pl. Születésnap, Borkóstoló">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Dátum</label>
+        <input class="form-input" type="date" id="qEvDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Időpont</label>
+        <input class="form-input" type="time" id="qEvTime">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Helyszín</label>
+        <select class="form-select" id="qEvPlace">
+          <option>Rendezvényház</option>
+          <option>Borospince</option>
+          <option>Étterem</option>
+          <option>Terasz</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Létszám</label>
+        <input class="form-input" type="number" id="qEvCount" placeholder="fő" min="1">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveQuickEvent()">Mentés</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// ⚙️  SUPABASE KONFIGURÁCIÓ – ide írd be a saját adataidat!
+// ══════════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://XXXXXXXXXXXXX.supabase.co';   // ← Project URL
+const SUPABASE_KEY = 'eyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';   // ← anon public key
+// ══════════════════════════════════════════════════════════════════════════════
+
+const API = `${SUPABASE_URL}/rest/v1`;
+const HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+// ── HELYI STATE (gyors render, Supabase a valódi forrás) ────────────────────
+const STATE = { rooms: [], events: [], wellness: [], shift: '' };
+
+// ── SEGÉDFÜGGVÉNYEK ──────────────────────────────────────────────────────────
+function todayStr()    { return new Date().toISOString().slice(0,10); }
+function tomorrowStr() { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+
+async function sbFetch(path, options={}) {
+  const res = await fetch(`${API}${path}`, { headers: HEADERS, ...options });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase hiba: ${res.status} – ${err}`);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// ── LOADING OVERLAY ──────────────────────────────────────────────────────────
+function setLoading(on) {
+  document.getElementById('loadingOverlay').style.display = on ? 'flex' : 'none';
+}
+
+// ── CLOCK ────────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('hTime').textContent = now.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('hDate').textContent = now.toLocaleDateString('hu-HU', {weekday:'long', month:'long', day:'numeric'});
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+// ── TAB SWITCHING ────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  if (id === 'rooms')     renderRooms('all');
+  if (id === 'dashboard') renderEvents();
+  if (id === 'wellness')  renderWellness();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SZOBÁK
+// ════════════════════════════════════════════════════════════════════════════
+async function loadRooms() {
+  const data = await sbFetch('/rooms?order=id');
+  if (data && data.length > 0) {
+    STATE.rooms = data;
+  } else {
+    // Első indítás: alapértelmezett szobák létrehozása
+    const defaults = [
+      ...Array.from({length:9}, (_,i) => ({ id:i+1, building:'kastely',    name:`${i+1}. szoba`,  guests:2, status:'clean', note:'' })),
+      ...Array.from({length:5}, (_,i) => ({ id:i+10, building:'paraszthaz', name:`${i+10}. szoba`, guests:2, status:'clean', note:'' })),
+    ];
+    const inserted = await sbFetch('/rooms', {
+      method: 'POST',
+      body: JSON.stringify(defaults)
+    });
+    STATE.rooms = inserted || defaults;
+  }
+}
+
+async function updateRoomInDB(id, changes) {
+  await sbFetch(`/rooms?id=eq.${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(changes)
+  });
+}
+
+function renderRooms(filter) {
+  const list = document.getElementById('roomList');
+  const kastely    = STATE.rooms.filter(r => r.building === 'kastely');
+  const paraszthaz = STATE.rooms.filter(r => r.building === 'paraszthaz');
+  function rHTML(r) {
+    if (filter !== 'all' && r.status !== filter) return '';
+    return `<div class="room-card" id="rc-${r.id}">
+      <div class="room-header">
+        <div>
+          <div class="room-name">${r.name}</div>
+          <div class="room-guests">
+            <input type="number" value="${r.guests}" min="1" max="6"
+              style="width:28px;border:none;background:none;font-size:11px;color:var(--stone);outline:none;font-family:var(--ff-sans)"
+              onchange="updateRoom(${r.id},'guests',this.value)"> fő
+          </div>
+        </div>
+        <select class="room-status-sel" data-status="${r.status}" onchange="updateRoomStatus(${r.id},this)">
+          <option value="clean"    ${r.status==='clean'   ?'selected':''}>🟢 Tiszta</option>
+          <option value="checkin"  ${r.status==='checkin' ?'selected':''}>🟡 Beköltözik</option>
+          <option value="checkout" ${r.status==='checkout'?'selected':''}>🔴 Kiköltözik</option>
+          <option value="occupied" ${r.status==='occupied'?'selected':''}>🔵 Foglalt</option>
+        </select>
+      </div>
+      <textarea class="room-note" placeholder="Szobaasszony megjegyzése..."
+        onblur="updateRoom(${r.id},'note',this.value)">${r.note || ''}</textarea>
+    </div>`;
+  }
+  list.innerHTML =
+    `<div class="building-label">🏰 Vadászkastély (1–9. szoba)</div>` + kastely.map(rHTML).join('') +
+    `<div class="building-label">🏡 Parasztház (10–14. szoba)</div>`   + paraszthaz.map(rHTML).join('');
+  updateDashboardStats();
+}
+
+async function updateRoom(id, key, val) {
+  const r = STATE.rooms.find(r => r.id === id);
+  if (!r) return;
+  r[key] = key === 'guests' ? parseInt(val) : val;
+  await updateRoomInDB(id, { [key]: r[key] });
+}
+
+async function updateRoomStatus(id, sel) {
+  sel.dataset.status = sel.value;
+  await updateRoom(id, 'status', sel.value);
+  updateDashboardStats();
+}
+
+function filterRooms(status, btn) {
+  document.querySelectorAll('.filter-row .btn-sm').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRooms(status);
+}
+
+function updateDashboardStats() {
+  const occ = STATE.rooms.filter(r => r.status==='occupied'||r.status==='checkin').length;
+  const co  = STATE.rooms.filter(r => r.status==='checkout').length;
+  const f = document.getElementById('statFoglalt');
+  const k = document.getElementById('statKikol');
+  if (f) f.textContent = occ;
+  if (k) k.textContent = co;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// ESEMÉNYEK
+// ════════════════════════════════════════════════════════════════════════════
+async function loadEvents() {
+  const data = await sbFetch('/events?order=date,time');
+  STATE.events = data || [];
+}
+
+function renderEvents() {
+  const list = document.getElementById('eventList');
+  const today = todayStr(), tomorrow = tomorrowStr();
+  const sorted = [...STATE.events].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  if (!sorted.length) {
+    list.innerHTML = '<p style="color:var(--stone);font-size:13px;text-align:center;padding:20px 0">Nincsenek közelgő események</p>';
+    return;
+  }
+  list.innerHTML = sorted.map(ev => {
+    let urgency = 'upcoming', badge = ev.date;
+    if (ev.date === today)    { urgency = 'urgent'; badge = 'MA'; }
+    else if (ev.date === tomorrow) { urgency = 'soon'; badge = 'HOLNAP'; }
+    return `<div class="event-card ${urgency}">
+      <div style="flex:1">
+        <span class="event-badge ${urgency}">${badge} ${ev.time}</span>
+        <div class="event-name">${ev.type}</div>
+        <div class="event-meta">${ev.place} · ${ev.count} fő</div>
+        ${ev.note ? `<div class="event-meta" style="margin-top:4px;font-style:italic">${ev.note}</div>` : ''}
+      </div>
+      <button class="event-edit" onclick="deleteEvent(${ev.id})" title="Törlés">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Törli ezt az eseményt?')) return;
+  await sbFetch(`/events?id=eq.${id}`, { method: 'DELETE' });
+  STATE.events = STATE.events.filter(e => e.id !== id);
+  renderEvents();
+  toast('Esemény törölve');
+}
+
+function openEventModal() {
+  document.getElementById('qEvDate').value = todayStr();
+  document.getElementById('eventModal').classList.add('open');
+}
+function closeEventModal(e) {
+  if (e.target === document.getElementById('eventModal'))
+    document.getElementById('eventModal').classList.remove('open');
+}
+
+async function saveQuickEvent() {
+  const type = document.getElementById('qEvType').value.trim();
+  if (!type) { toast('⚠️ Adj meg rendezvény nevet!'); return; }
+  const ev = {
+    type,
+    date:  document.getElementById('qEvDate').value  || todayStr(),
+    time:  document.getElementById('qEvTime').value  || '00:00',
+    place: document.getElementById('qEvPlace').value,
+    count: parseInt(document.getElementById('qEvCount').value) || 0,
+    note: ''
+  };
+  const [inserted] = await sbFetch('/events', { method:'POST', body: JSON.stringify(ev) });
+  STATE.events.push(inserted);
+  renderEvents();
+  document.getElementById('eventModal').classList.remove('open');
+  document.getElementById('qEvType').value = '';
+  toast('✅ Esemény mentve!');
+}
+
+async function saveEvent() {
+  const type = document.getElementById('evType').value.trim();
+  if (!type) { toast('⚠️ Add meg a rendezvény nevét!'); return; }
+  const ev = {
+    type,
+    date:         document.getElementById('evDate').value        || todayStr(),
+    time:         document.getElementById('evTime').value        || '00:00',
+    place:        document.getElementById('evPlace').value,
+    count:        parseInt(document.getElementById('evCount').value) || 0,
+    note:         document.getElementById('evNote').value.trim(),
+    catering:     document.getElementById('evCatering').value,
+    takeaway:     document.getElementById('takeaway').checked,
+    takeaway_time:document.getElementById('evTakeawayTime').value,
+    takeaway_who: document.getElementById('evTakeawayWho').value,
+  };
+  const [inserted] = await sbFetch('/events', { method:'POST', body: JSON.stringify(ev) });
+  STATE.events.push(inserted);
+  ['evType','evDate','evTime','evCount','evNote','evTakeawayTime','evTakeawayWho'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('takeaway').checked = false;
+  document.getElementById('takeawayFields').style.display = 'none';
+  document.getElementById('photoPreview').style.display = 'none';
+  toast('✅ Esemény mentve!');
+  showTab('dashboard');
+  renderEvents();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// WELLNESS
+// ════════════════════════════════════════════════════════════════════════════
+const SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+
+async function loadWellness() {
+  const data = await sbFetch(`/wellness?date=eq.${todayStr()}`);
+  STATE.wellness = data || [];
+}
+
+function renderWellness() {
+  ['jacuzzi','sauna'].forEach(type => {
+    const cont = document.getElementById(type + 'Slots');
+    cont.innerHTML = SLOTS.map(t => {
+      const entry = STATE.wellness.find(w => w.type === type && w.time === t);
+      return `<div class="wslot ${entry ? 'booked' : 'free'}" onclick="toggleWSlot('${type}','${t}')">
+        <div class="wslot-time">${t}</div>
+        <div class="wslot-label">${entry ? entry.guest : 'Szabad'}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+async function toggleWSlot(type, time) {
+  const entry = STATE.wellness.find(w => w.type === type && w.time === time);
+  if (entry) {
+    if (!confirm('Törli a foglalást?')) return;
+    await sbFetch(`/wellness?id=eq.${entry.id}`, { method: 'DELETE' });
+    STATE.wellness = STATE.wellness.filter(w => w.id !== entry.id);
+    renderWellness();
+    toast('Foglalás törölve');
+  }
+}
+
+async function bookWellness() {
+  const guest = document.getElementById('wGuestName').value.trim();
+  const time  = document.getElementById('wTime').value;
+  const type  = document.getElementById('wType').value;
+  if (!guest) { toast('⚠️ Add meg a vendég nevét!'); return; }
+  const types = type === 'both' ? ['jacuzzi','sauna'] : [type];
+  for (const t of types) {
+    const existing = STATE.wellness.find(w => w.type === t && w.time === time);
+    if (existing) { toast(`⚠️ ${time} már foglalt (${t})!`); continue; }
+    const [inserted] = await sbFetch('/wellness', {
+      method: 'POST',
+      body: JSON.stringify({ type: t, time, guest, date: todayStr() })
+    });
+    STATE.wellness.push(inserted);
+  }
+  renderWellness();
+  document.getElementById('wGuestName').value = '';
+  toast('✅ Wellness foglalás mentve!');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MŰSZAKÁTADÓ
+// ════════════════════════════════════════════════════════════════════════════
+async function loadShift() {
+  const data = await sbFetch('/shift?order=updated_at.desc&limit=1');
+  if (data && data.length > 0) {
+    STATE.shift = data[0].message || '';
+    document.getElementById('shiftNote').value = STATE.shift;
+  }
+}
+
+async function saveShift() {
+  const message = document.getElementById('shiftNote').value;
+  // Upsert: ha van már bejegyzés, frissíti
+  await sbFetch('/shift', {
+    method: 'POST',
+    headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({ id: 1, message, updated_at: new Date().toISOString() })
+  });
+  STATE.shift = message;
+  toast('✅ Műszakátadó mentve!');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FORM HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function toggleTakeaway() {
+  document.getElementById('takeawayFields').style.display =
+    document.getElementById('takeaway').checked ? 'grid' : 'none';
+}
+function photoSelected(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photoImg').src = e.target.result;
+    document.getElementById('photoPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// VALÓS IDEJŰ FRISSÍTÉS (Supabase Realtime)
+// ════════════════════════════════════════════════════════════════════════════
+function initRealtime() {
+  // Supabase Realtime WebSocket channel
+  const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+  const ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ topic:'realtime:public', event:'phx_join', payload:{}, ref:'1' }));
+  };
+
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+    if (data.event !== 'INSERT' && data.event !== 'UPDATE' && data.event !== 'DELETE') return;
+    const table = data.payload?.data?.table;
+    if (table === 'rooms')   { loadRooms().then(() => renderRooms('all')); }
+    if (table === 'events')  { loadEvents().then(renderEvents); }
+    if (table === 'wellness'){ loadWellness().then(renderWellness); }
+    if (table === 'shift')   { loadShift(); }
+  };
+
+  ws.onerror = () => {}; // csendben kezeljük
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════════════
+async function init() {
+  setLoading(true);
+  try {
+    await Promise.all([loadRooms(), loadEvents(), loadWellness(), loadShift()]);
+    updateDashboardStats();
+    renderEvents();
+    initRealtime();
+    document.getElementById('evDate').value   = todayStr();
+    document.getElementById('qEvDate').value  = todayStr();
+  } catch (e) {
+    toast('⚠️ Kapcsolódási hiba – ellenőrizd a Supabase adatokat!');
+    console.error(e);
+  } finally {
+    setLoading(false);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
