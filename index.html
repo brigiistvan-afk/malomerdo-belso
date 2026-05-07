@@ -404,7 +404,7 @@ hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 
     <div style="font-size:22px;margin-bottom:4px">📊</div>
     <div style="font-size:12px;font-weight:600">Previo XLS feltöltése</div>
     <div style="font-size:10px;opacity:.5;margin-top:2px">Automatikusan frissíti a szobákat</div>
-    <input type="file" id="previoFile" accept=".xlsx,.xls" style="display:none" onchange="importPrevio(this)">
+    <input type="file" id="previoFile" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,*/*" style="display:none" onchange="importPrevio(this)">
   </label>
   <div id="previoStatus" style="font-size:11px;margin-top:10px;text-align:center;opacity:.7"></div>
 </div>
@@ -591,7 +591,15 @@ hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 
 <div class="modal-overlay" id="eventModal" onclick="closeEventModal(event)">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Gyors eseményrögzítés</div>
+
+    <!-- Meglévő események listája -->
+    <div class="modal-title">Közelgő események</div>
+    <div id="modalEventList" style="margin-bottom:20px"></div>
+
+    <hr style="border:none;border-top:1px solid rgba(0,0,0,.08);margin:0 0 20px">
+
+    <!-- Új esemény rögzítése -->
+    <div style="font-family:var(--ff-serif);font-size:18px;color:var(--forest);margin-bottom:14px">+ Új esemény</div>
     <div class="form-group">
       <label class="form-label">Rendezvény neve</label>
       <input class="form-input" type="text" id="qEvType" placeholder="pl. Születésnap, Borkóstoló">
@@ -992,7 +1000,67 @@ async function deleteEvent(id) {
 
 function openEventModal() {
   document.getElementById('qEvDate').value = todayStr();
+  renderModalEvents();
   document.getElementById('eventModal').classList.add('open');
+}
+
+function renderModalEvents() {
+  const list = document.getElementById('modalEventList');
+  const today = todayStr(), tomorrow = tomorrowStr();
+  const sorted = [...STATE.events].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+
+  if (!sorted.length) {
+    list.innerHTML = '<p style="color:var(--stone);font-size:12px;text-align:center;padding:8px 0">Nincsenek rögzített események</p>';
+    return;
+  }
+
+  list.innerHTML = sorted.map(ev => {
+    let urgency = 'upcoming', badge = ev.date;
+    if (ev.date === today)    { urgency = 'urgent'; badge = 'MA'; }
+    else if (ev.date === tomorrow) { urgency = 'soon'; badge = 'HOLNAP'; }
+
+    const urgencyColors = {
+      urgent:   { bg: '#fff5f5', border: '#c0392b', badgeBg: '#fde8e8', badgeColor: '#c0392b' },
+      soon:     { bg: '#fff8f2', border: '#d4692a', badgeBg: '#fde8d4', badgeColor: '#d4692a' },
+      upcoming: { bg: '#f0f4ff', border: '#2563a8', badgeBg: '#dbeafe', badgeColor: '#2563a8' },
+    };
+    const c = urgencyColors[urgency];
+
+    return `<div style="background:${c.bg};border-left:4px solid ${c.border};border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:${c.badgeBg};color:${c.badgeColor}">${badge} ${ev.time}</span>
+          <div style="font-family:var(--ff-serif);font-size:17px;color:var(--ink);margin-top:5px">${ev.type}</div>
+        </div>
+        <button onclick="deleteEvent(${ev.id});renderModalEvents()" style="background:none;border:none;cursor:pointer;color:var(--stone);padding:4px;font-size:14px">🗑</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Helyszín</div>
+          <div style="font-size:13px;font-weight:600;color:var(--forest)">${ev.place}</div>
+        </div>
+        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Létszám</div>
+          <div style="font-size:13px;font-weight:600;color:var(--forest)">${ev.count} fő</div>
+        </div>
+        ${ev.catering && ev.catering !== 'Nincs catering' ? `
+        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px;grid-column:1/-1">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Catering</div>
+          <div style="font-size:12px;color:var(--ink)">${ev.catering}</div>
+        </div>` : ''}
+        ${ev.note ? `
+        <div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:3px">Megjegyzés</div>
+          <div style="font-size:12px;color:var(--ink);font-style:italic">${ev.note}</div>
+        </div>` : ''}
+        ${ev.takeaway ? `
+        <div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082">
+          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:3px">🥡 Elvitelre</div>
+          <div style="font-size:12px;color:var(--ink)">${ev.takeaway_time || ''} ${ev.takeaway_who ? '– ' + ev.takeaway_who : ''}</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 function closeEventModal(e) {
   if (e.target === document.getElementById('eventModal'))
