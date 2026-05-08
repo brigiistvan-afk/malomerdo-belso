@@ -812,7 +812,7 @@ function renderWeekTable() {
   html += '</tr></thead><tbody>';
 
   STATE.rooms.forEach(function(r){
-    var bookings = STATE.weeklyMap[r.id]||[];
+    var bookings = STATE.weeklyMap[r.id] || STATE.weeklyMap[String(r.id)] || [];
     html += '<tr><td>'+r.name+'</td>';
     days.forEach(function(d){
       var bk = bookings.find(function(b){ return b.checkinDate<=d && b.checkoutDate>d; });
@@ -887,10 +887,11 @@ async function importPrevio(input) {
       var id=NAME_TO_ID[szoba];
       if (!szoba||!cin||!cout) continue;
 
-      // Weekly map - all bookings
+      // Weekly map - all bookings (integer key)
       if (id) {
-        if (!wMap[id]) wMap[id]=[];
-        wMap[id].push({checkinDate:cin,checkoutDate:cout,vendeg:vendeg,fo:fo});
+        var iid = parseInt(id);
+        if (!wMap[iid]) wMap[iid]=[];
+        wMap[iid].push({checkinDate:cin,checkoutDate:cout,vendeg:vendeg,fo:fo});
       }
 
       // Today's map - only active today
@@ -909,18 +910,20 @@ async function importPrevio(input) {
       // Delete old bookings first, then insert new ones
       try { await sb('/room_bookings?id=gte.0',{method:'DELETE'}); } catch(ex){}
       var toInsert = [];
-      for (var rid in wMap) {
+      Object.keys(wMap).forEach(function(rid){
+        var roomId = parseInt(rid);
+        var room = STATE.rooms.find(function(r){ return r.id===roomId; });
         wMap[rid].forEach(function(b){
           toInsert.push({
-            room_id: parseInt(rid),
-            room_name: STATE.rooms.find(function(r){ return r.id===parseInt(rid); }) ? STATE.rooms.find(function(r){ return r.id===parseInt(rid); }).name : '',
-            guest: b.vendeg,
+            room_id: roomId,
+            room_name: room ? room.name : '',
+            guest: b.vendeg||'',
             checkin_date: b.checkinDate,
             checkout_date: b.checkoutDate,
-            guests: b.fo
+            guests: b.fo||2
           });
         });
-      }
+      });
       if (toInsert.length>0) {
         await sb('/room_bookings',{method:'POST',body:JSON.stringify(toInsert)});
       }
@@ -959,6 +962,7 @@ async function importPrevio(input) {
 
     renderRooms('all');
     renderWeekTable();
+    renderCalendar();
     updateStats();
     status.textContent='✅ '+updated+' szoba frissítve | Reggeli: '+reggeli+' fő | Vacsora: '+vacsora+' fő';
     toast('✅ Previo import kész!');
@@ -996,8 +1000,9 @@ async function loadRoomBookings() {
     if (!data||!data.length) return;
     var wMap = {};
     data.forEach(function(b){
-      if (!wMap[b.room_id]) wMap[b.room_id]=[];
-      wMap[b.room_id].push({checkinDate:b.checkin_date,checkoutDate:b.checkout_date,vendeg:b.guest,fo:b.guests});
+      var rid = parseInt(b.room_id);
+      if (!wMap[rid]) wMap[rid]=[];
+      wMap[rid].push({checkinDate:b.checkin_date,checkoutDate:b.checkout_date,vendeg:b.guest||'',fo:parseInt(b.guests)||2});
     });
     STATE.weeklyMap = wMap;
   } catch(e){ console.warn('loadRoomBookings:',e); }
