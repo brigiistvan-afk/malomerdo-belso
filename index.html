@@ -4,1677 +4,1055 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Malomerdő – Belső Rendszer</title>
-
-<!-- PWA & Icons -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d2b0e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Malomerdő">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="shortcut icon" href="favicon.ico">
-
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --forest:    #0d2b0e;
-  --forest-mid:#1a4a1c;
-  --moss:      #2d6e30;
-  --leaf:      #4a9e4e;
-  --gold:      #c9961e;
-  --gold-light:#e8b84b;
-  --cream:     #f5f0e4;
-  --parchment: #ede5cc;
-  --bark:      #5c3a1e;
-  --stone:     #8a8070;
-  --white:     #fdfaf3;
-  --red:       #c0392b;
-  --orange:    #d4692a;
-  --blue:      #2563a8;
-  --ink:       #1a1a14;
-  --shadow:    rgba(13,43,14,0.18);
-  --ff-serif:  'DM Serif Display', Georgia, serif;
-  --ff-sans:   'DM Sans', sans-serif;
-  --nav-h:     64px;
-  --header-h:  58px;
+:root{
+  --forest:#0d2b0e;--fmid:#1a4a1c;--moss:#2d6e30;
+  --gold:#c9961e;--goldl:#e8b84b;--cream:#f5f0e4;--parch:#ede5cc;
+  --bark:#5c3a1e;--stone:#8a8070;--white:#fdfaf3;
+  --red:#c0392b;--orange:#d4692a;--blue:#2563a8;--ink:#1a1a14;
+  --sh:rgba(13,43,14,0.15);--ff:'DM Serif Display',Georgia,serif;--fs:'DM Sans',sans-serif;
+  --nh:60px;--hh:54px;
 }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
-body {
-  font-family: var(--ff-sans);
-  background: var(--cream);
-  color: var(--ink);
-  min-height: 100dvh;
-  overflow-x: hidden;
-}
-
-/* ── HEADER ────────────────────────────────────────── */
-.header {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: var(--header-h);
-  background: var(--forest);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 18px;
-  box-shadow: 0 2px 16px var(--shadow);
-}
-.header-brand { display: flex; flex-direction: column; }
-.header-brand h1 {
-  font-family: var(--ff-serif);
-  font-size: 19px; color: var(--cream); line-height: 1.1; letter-spacing: .3px;
-}
-.header-brand span {
-  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
-  color: rgba(245,240,228,.4); margin-top: 2px;
-}
-.header-date {
-  font-size: 11px; color: rgba(245,240,228,.6);
-  text-align: right; line-height: 1.4;
-}
-.header-date strong { display: block; font-size: 13px; color: var(--gold-light); font-weight: 500; }
-
-/* ── NAV ───────────────────────────────────────────── */
-.nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-  height: var(--nav-h);
-  background: var(--white);
-  border-top: 1px solid rgba(0,0,0,.08);
-  display: flex;
-  box-shadow: 0 -4px 24px rgba(0,0,0,.08);
-}
-.nav-btn {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 4px;
-  border: none; background: none; cursor: pointer;
-  font-family: var(--ff-sans); font-size: 9px; font-weight: 600;
-  letter-spacing: 1px; text-transform: uppercase;
-  color: var(--stone); transition: all .2s; padding: 8px 4px;
-  position: relative;
-}
-.nav-btn svg { width: 22px; height: 22px; transition: transform .2s; }
-.nav-btn.active { color: var(--forest-mid); }
-.nav-btn.active svg { transform: translateY(-2px); }
-.nav-btn.active::after {
-  content: ''; position: absolute; top: 0; left: 20%; right: 20%;
-  height: 3px; background: var(--moss); border-radius: 0 0 4px 4px;
-}
-.nav-btn:active { transform: scale(.95); }
-
-/* ── MAIN ──────────────────────────────────────────── */
-.main {
-  padding-top: calc(var(--header-h) + 16px);
-  padding-bottom: calc(var(--nav-h) + 20px);
-  padding-left: 16px; padding-right: 16px;
-  max-width: 560px; margin: 0 auto;
-}
-
-/* ── TABS ──────────────────────────────────────────── */
-.tab { display: none; animation: fadeIn .25s ease; }
-.tab.active { display: block; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-
-/* ── CARD ──────────────────────────────────────────── */
-.card {
-  background: var(--white); border-radius: 18px;
-  box-shadow: 0 2px 12px var(--shadow); padding: 20px;
-  margin-bottom: 14px; border: 1px solid rgba(255,255,255,.8);
-}
-.card-title {
-  font-family: var(--ff-serif); font-size: 18px;
-  color: var(--forest); margin-bottom: 14px;
-  display: flex; align-items: center; gap: 8px;
-}
-.card-title svg { width: 20px; height: 20px; color: var(--moss); }
-
-/* ── SECTION LABEL ─────────────────────────────────── */
-.sec-label {
-  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
-  color: var(--stone); font-weight: 600; margin: 20px 0 10px;
-}
-
-/* ── STAT CARDS ────────────────────────────────────── */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-.stat-card {
-  background: var(--white); border-radius: 16px;
-  box-shadow: 0 2px 10px var(--shadow); padding: 16px;
-  position: relative; overflow: hidden;
-}
-.stat-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-}
-.stat-card.yellow::before { background: var(--gold); }
-.stat-card.indigo::before { background: #4f46e5; }
-.stat-card.green::before  { background: var(--moss); }
-.stat-card.red::before    { background: var(--red); }
-.stat-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--stone); font-weight: 600; margin-bottom: 6px; }
-.stat-val { font-size: 28px; font-weight: 600; color: var(--ink); line-height: 1; }
-.stat-val input { font-size: 28px; font-weight: 600; color: var(--ink); width: 100%; border: none; background: none; outline: none; }
-.stat-sub { font-size: 10px; color: var(--stone); margin-top: 4px; }
-
-/* ── EVENT CARDS ───────────────────────────────────── */
-.event-card {
-  background: var(--white); border-radius: 16px;
-  box-shadow: 0 2px 10px var(--shadow); padding: 16px;
-  margin-bottom: 10px; border-left: 5px solid transparent;
-  display: flex; justify-content: space-between; align-items: flex-start;
-}
-.event-card.urgent { border-color: var(--red); }
-.event-card.soon { border-color: var(--orange); }
-.event-card.upcoming { border-color: var(--blue); }
-.event-badge {
-  font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-  padding: 3px 8px; border-radius: 20px; margin-bottom: 5px; display: inline-block;
-}
-.event-badge.urgent { background: #fde8e8; color: var(--red); }
-.event-badge.soon { background: #fde8d4; color: var(--orange); }
-.event-badge.upcoming { background: #dbeafe; color: var(--blue); }
-.event-name { font-family: var(--ff-serif); font-size: 17px; color: var(--ink); }
-.event-meta { font-size: 12px; color: var(--stone); margin-top: 3px; }
-.event-edit { background: none; border: none; cursor: pointer; padding: 6px; color: var(--stone); }
-.event-edit:hover { color: var(--moss); }
-
-/* ── WELLNESS SLOTS ────────────────────────────────── */
-.wellness-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.wslot {
-  background: var(--cream); border-radius: 12px; padding: 10px 8px;
-  text-align: center; border: 1.5px solid transparent; cursor: pointer;
-  transition: all .2s; position: relative;
-}
-.wslot.free { border-color: rgba(45,110,48,.25); }
-.wslot.free:hover { border-color: var(--moss); background: #eef7ee; }
-.wslot.booked { background: var(--forest-mid); color: var(--cream); border-color: var(--forest-mid); }
-.wslot.booked .wslot-time { color: rgba(245,240,228,.7); }
-.wslot-time { font-size: 11px; font-weight: 600; color: var(--stone); }
-.wslot-label { font-size: 10px; margin-top: 3px; }
-.wslot.free .wslot-label { color: var(--moss); }
-.wslot.booked .wslot-label { color: var(--gold-light); }
-
-/* ── ROOM LIST ─────────────────────────────────────── */
-.building-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--bark); background: var(--parchment); border-radius: 8px;
-  padding: 6px 12px; margin: 16px 0 8px; display: flex; align-items: center; gap: 6px;
-}
-.room-card {
-  background: var(--white); border-radius: 14px;
-  box-shadow: 0 1px 6px var(--shadow); padding: 14px;
-  margin-bottom: 8px; border: 1.5px solid rgba(0,0,0,.05);
-  display: flex; flex-direction: column; gap: 10px;
-}
-.room-header { display: flex; justify-content: space-between; align-items: center; }
-.room-name { font-weight: 700; font-size: 15px; color: var(--forest); }
-.room-guests { font-size: 11px; color: var(--stone); }
-.room-status-sel {
-  font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 20px;
-  border: 1.5px solid transparent; cursor: pointer; outline: none; background: var(--cream);
-  appearance: none; -webkit-appearance: none; text-align: center;
-}
-.room-status-sel[data-status="clean"]    { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
-.room-status-sel[data-status="checkin"]  { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
-.room-status-sel[data-status="checkout"] { background: #fce4ec; color: #c62828; border-color: #ef9a9a; }
-.room-status-sel[data-status="occupied"] { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
-.room-note {
-  width: 100%; padding: 8px 12px; font-family: var(--ff-sans); font-size: 12px;
-  background: var(--cream); border: 1.5px solid transparent; border-radius: 10px;
-  outline: none; resize: none; color: var(--ink);
-  transition: border-color .2s; min-height: 36px;
-}
-.room-note:focus { border-color: var(--leaf); }
-.room-note::placeholder { color: var(--stone); }
-
-/* ── FORM ELEMENTS ─────────────────────────────────── */
-.form-group { margin-bottom: 14px; }
-.form-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--stone); margin-bottom: 6px; display: block; }
-.form-input, .form-select, .form-textarea {
-  width: 100%; padding: 12px 14px; font-family: var(--ff-sans); font-size: 14px;
-  background: var(--cream); border: 1.5px solid rgba(0,0,0,.1); border-radius: 12px;
-  outline: none; color: var(--ink); transition: border-color .2s;
-  appearance: none; -webkit-appearance: none;
-}
-.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--moss); background: var(--white); }
-.form-textarea { resize: vertical; min-height: 80px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.form-divider { border: none; border-top: 1px solid rgba(0,0,0,.07); margin: 16px 0; }
-.checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer; }
-.checkbox-row input { width: 18px; height: 18px; accent-color: var(--moss); cursor: pointer; }
-.checkbox-row label { font-size: 13px; font-weight: 600; color: var(--bark); cursor: pointer; }
-.photo-upload {
-  border: 2px dashed rgba(45,110,48,.3); border-radius: 14px;
-  background: rgba(45,110,48,.04); padding: 20px; text-align: center;
-  cursor: pointer; transition: all .2s; margin-bottom: 14px;
-}
-.photo-upload:hover { border-color: var(--moss); background: rgba(45,110,48,.08); }
-.photo-upload p { font-size: 12px; color: var(--moss); margin-top: 6px; font-weight: 500; }
-.photo-upload span { font-size: 10px; color: var(--stone); }
-
-/* ── BUTTONS ───────────────────────────────────────── */
-.btn {
-  display: block; width: 100%; padding: 15px; border: none; cursor: pointer;
-  font-family: var(--ff-sans); font-size: 12px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase; border-radius: 14px;
-  transition: all .2s; text-align: center;
-}
-.btn-primary { background: var(--forest-mid); color: var(--cream); }
-.btn-primary:hover { background: var(--forest); transform: translateY(-1px); box-shadow: 0 6px 20px var(--shadow); }
-.btn-primary:active { transform: none; }
-.btn-sm {
-  display: inline-block; padding: 8px 16px; border: none; cursor: pointer;
-  font-family: var(--ff-sans); font-size: 10px; font-weight: 700;
-  letter-spacing: 1.5px; text-transform: uppercase; border-radius: 10px;
-  transition: all .2s; background: var(--parchment); color: var(--stone);
-}
-.btn-sm:hover { background: var(--parchment); color: var(--forest); }
-.btn-sm.active { background: var(--forest-mid); color: var(--cream); }
-
-/* ── SHIFT NOTE ────────────────────────────────────── */
-.shift-note {
-  background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%);
-  border-radius: 18px; padding: 20px; color: var(--cream); margin-bottom: 14px;
-}
-.shift-note h3 { font-family: var(--ff-serif); font-size: 17px; margin-bottom: 4px; color: var(--gold-light); }
-.shift-note p { font-size: 11px; opacity: .6; margin-bottom: 12px; }
-.shift-textarea {
-  width: 100%; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
-  border-radius: 10px; padding: 10px; color: var(--cream); font-family: var(--ff-sans);
-  font-size: 13px; resize: none; outline: none; min-height: 80px;
-}
-.shift-textarea::placeholder { color: rgba(245,240,228,.4); }
-.shift-save {
-  margin-top: 10px; padding: 10px; width: 100%; border: 1px solid rgba(255,255,255,.25);
-  background: rgba(255,255,255,.12); color: var(--cream); border-radius: 10px;
-  font-family: var(--ff-sans); font-size: 11px; font-weight: 600; cursor: pointer;
-  letter-spacing: 1px; text-transform: uppercase; transition: all .2s;
-}
-.shift-save:hover { background: rgba(255,255,255,.2); }
-
-/* ── CALENDAR TAB ──────────────────────────────────── */
-.week-header { display:grid; grid-template-columns: 60px repeat(7,1fr); gap:2px; margin-bottom:4px; }
-.week-day { text-align:center; font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--stone); padding:6px 2px; }
-.week-day.today { color:var(--moss); background:rgba(45,110,48,.08); border-radius:6px; }
-.week-row { display:grid; grid-template-columns: 60px repeat(7,1fr); gap:2px; margin-bottom:2px; align-items:start; }
-.week-room-label { font-size:9px; font-weight:700; color:var(--bark); padding:6px 4px; line-height:1.2; }
-.week-cell { min-height:32px; border-radius:6px; padding:2px; position:relative; }
-.week-cell.occupied { background:var(--forest-mid); }
-.week-cell.checkin  { background:#f57f17; }
-.week-cell.checkout { background:var(--red); }
-.week-cell.clean    { background:rgba(0,0,0,.04); }
-.week-cell-label { font-size:8px; color:rgba(255,255,255,.85); padding:2px 3px; line-height:1.2; font-weight:600; overflow:hidden; }
-.week-legend { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-.week-legend-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--stone); }
-.week-legend-dot { width:10px; height:10px; border-radius:3px; }
-
-/* ── TOAST ─────────────────────────────────────────── */
-.toast {
-  position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--forest); color: var(--cream); padding: 10px 20px;
-  border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: .5px;
-  opacity: 0; transition: all .3s; z-index: 200; white-space: nowrap;
-  box-shadow: 0 4px 20px rgba(0,0,0,.3);
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ── INFO BOX ──────────────────────────────────────── */
-.info-box {
-  background: rgba(37,99,168,.08); border: 1px solid rgba(37,99,168,.2);
-  border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
-  display: flex; gap: 10px; align-items: flex-start;
-}
-.info-box p { font-size: 12px; color: #1e40af; line-height: 1.5; }
-
-/* ── FILTER ROW ────────────────────────────────────── */
-.filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; }
-.filter-row::-webkit-scrollbar { display: none; }
-
-/* ── DIVIDER ───────────────────────────────────────── */
-hr.gold { border: none; border-top: 1px solid rgba(201,150,30,.2); margin: 16px 0; }
-
-/* ── MODAL ─────────────────────────────────────────── */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5);
-  z-index: 300; display: flex; align-items: flex-end; justify-content: center;
-  opacity: 0; pointer-events: none; transition: opacity .25s;
-}
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal {
-  background: var(--white); border-radius: 24px 24px 0 0; padding: 24px 20px;
-  width: 100%; max-width: 560px; max-height: 85dvh; overflow-y: auto;
-  transform: translateY(40px); transition: transform .3s;
-}
-.modal-overlay.open .modal { transform: translateY(0); }
-.modal-handle { width: 40px; height: 4px; background: rgba(0,0,0,.12); border-radius: 2px; margin: 0 auto 20px; }
-.modal-title { font-family: var(--ff-serif); font-size: 22px; color: var(--forest); margin-bottom: 16px; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fs);background:var(--cream);color:var(--ink);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+/* HEADER */
+.hdr{height:var(--hh);background:var(--forest);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;box-shadow:0 2px 12px var(--sh)}
+.hdr-brand h1{font-family:var(--ff);font-size:18px;color:var(--cream);letter-spacing:.3px}
+.hdr-brand small{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,228,.35);display:block;margin-top:1px}
+.hdr-time{text-align:right}.hdr-time strong{display:block;font-size:13px;color:var(--goldl);font-weight:500}
+.hdr-time span{font-size:10px;color:rgba(245,240,228,.5)}
+/* NAV */
+.nav{height:var(--nh);background:var(--white);border-top:1px solid rgba(0,0,0,.07);display:flex;flex-shrink:0;box-shadow:0 -2px 12px rgba(0,0,0,.07)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;font-family:var(--fs);font-size:8px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--stone);padding:5px 2px;position:relative;transition:color .2s}
+.nb svg{width:19px;height:19px;transition:transform .2s}
+.nb.active{color:var(--fmid)}
+.nb.active svg{transform:translateY(-2px)}
+.nb.active::after{content:'';position:absolute;top:0;left:15%;right:15%;height:3px;background:var(--moss);border-radius:0 0 3px 3px}
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:14px;max-width:540px;width:100%;margin:0 auto}
+.tab{display:none;animation:fi .22s ease}
+.tab.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* CARDS */
+.card{background:var(--white);border-radius:14px;box-shadow:0 2px 10px var(--sh);padding:16px;margin-bottom:12px}
+.card-title{font-family:var(--ff);font-size:17px;color:var(--forest);margin-bottom:12px}
+.sec{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--stone);font-weight:600;margin:16px 0 8px}
+/* STAT GRID */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sc{background:var(--white);border-radius:13px;box-shadow:0 2px 8px var(--sh);padding:14px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.sc.y::before{background:var(--gold)}.sc.ind::before{background:#4f46e5}
+.sc.g::before{background:var(--moss)}.sc.r::before{background:var(--red)}
+.sc-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);font-weight:600;margin-bottom:4px}
+.sc-val{font-size:26px;font-weight:600;color:var(--ink);line-height:1}
+.sc-val input{font-size:26px;font-weight:600;color:var(--ink);width:100%;border:none;background:none;outline:none;font-family:var(--fs)}
+.sc-sub{font-size:9px;color:var(--stone);margin-top:3px}
+/* EVENTS */
+.ecard{background:var(--white);border-radius:13px;box-shadow:0 2px 8px var(--sh);padding:14px;margin-bottom:8px;border-left:4px solid transparent;display:flex;justify-content:space-between;align-items:flex-start}
+.ecard.u{border-color:var(--red)}.ecard.s{border-color:var(--orange)}.ecard.f{border-color:var(--blue)}
+.ebadge{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:20px;display:inline-block;margin-bottom:4px}
+.ebadge.u{background:#fde8e8;color:var(--red)}.ebadge.s{background:#fde8d4;color:var(--orange)}.ebadge.f{background:#dbeafe;color:var(--blue)}
+.ename{font-family:var(--ff);font-size:16px;color:var(--ink)}
+.emeta{font-size:11px;color:var(--stone);margin-top:2px}
+.edel{background:none;border:none;cursor:pointer;padding:4px;color:var(--stone);font-size:15px}
+.edel:hover{color:var(--red)}
+/* ROOMS */
+.blbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--bark);background:var(--parch);border-radius:7px;padding:5px 10px;margin:12px 0 6px}
+.rcard{background:var(--white);border-radius:12px;box-shadow:0 1px 6px var(--sh);padding:12px;margin-bottom:7px;display:flex;flex-direction:column;gap:8px}
+.rhdr{display:flex;justify-content:space-between;align-items:center}
+.rname{font-weight:700;font-size:14px;color:var(--forest)}
+.rguests{font-size:10px;color:var(--stone);margin-top:1px}
+.rsel{font-size:10px;font-weight:600;padding:5px 9px;border-radius:20px;border:1.5px solid transparent;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none}
+.rsel[data-s="clean"]{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7}
+.rsel[data-s="checkin"]{background:#fff8e1;color:#f57f17;border-color:#ffe082}
+.rsel[data-s="checkout"]{background:#fce4ec;color:#c62828;border-color:#ef9a9a}
+.rsel[data-s="occupied"]{background:#e3f2fd;color:#1565c0;border-color:#90caf9}
+.rnote{width:100%;padding:7px 10px;font-family:var(--fs);font-size:11px;background:var(--cream);border:1.5px solid transparent;border-radius:8px;outline:none;resize:none;min-height:32px;transition:border-color .2s}
+.rnote:focus{border-color:var(--moss)}
+.clean-btns{display:flex;gap:6px;margin-top:2px}
+.cbtn{flex:1;padding:7px;border-radius:9px;border:1.5px solid rgba(0,0,0,.1);font-size:10px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--stone);transition:.2s}
+.cbtn.normal.active{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7}
+.cbtn.deep.active{background:#fce4ec;color:var(--red);border-color:#ef9a9a}
+/* FILTER ROW */
+.frow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.frow::-webkit-scrollbar{display:none}
+.fbtn{display:inline-block;padding:6px 12px;border:none;cursor:pointer;font-family:var(--fs);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-radius:9px;background:var(--parch);color:var(--stone);white-space:nowrap;transition:.2s}
+.fbtn.active{background:var(--fmid);color:var(--cream)}
+/* WELLNESS */
+.wg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ws{background:var(--cream);border-radius:10px;padding:8px 6px;text-align:center;border:1.5px solid transparent;cursor:pointer;transition:.2s}
+.ws.free{border-color:rgba(45,110,48,.25)}.ws.free:hover{border-color:var(--moss);background:#eef7ee}
+.ws.booked{background:var(--fmid);border-color:var(--fmid)}
+.ws-t{font-size:10px;font-weight:600;color:var(--stone)}.ws.booked .ws-t{color:rgba(245,240,228,.7)}
+.ws-l{font-size:9px;margin-top:2px;color:var(--moss)}.ws.booked .ws-l{color:var(--goldl)}
+/* FORM */
+.fg{margin-bottom:11px}
+.fl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:5px;display:block}
+.fi,.fsel,.fta{width:100%;padding:10px 12px;font-family:var(--fs);font-size:13px;background:var(--cream);border:1.5px solid rgba(0,0,0,.1);border-radius:10px;outline:none;color:var(--ink);transition:border-color .2s;appearance:none;-webkit-appearance:none}
+.fi:focus,.fsel:focus,.fta:focus{border-color:var(--moss);background:var(--white)}
+.fta{resize:vertical;min-height:70px}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
+.btn{display:block;width:100%;padding:13px;border:none;cursor:pointer;font-family:var(--fs);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:12px;transition:.2s;text-align:center;background:var(--fmid);color:var(--cream)}
+.btn:hover{background:var(--forest);transform:translateY(-1px)}
+.cbrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer}
+.cbrow input{width:16px;height:16px;accent-color:var(--moss);cursor:pointer}
+.cbrow label{font-size:12px;font-weight:600;color:var(--bark);cursor:pointer}
+/* SHIFT */
+.shift-box{background:linear-gradient(135deg,var(--forest),var(--fmid));border-radius:14px;padding:16px;margin-bottom:12px;color:var(--cream)}
+.shift-box h3{font-family:var(--ff);font-size:16px;color:var(--goldl);margin-bottom:3px}
+.shift-box p{font-size:10px;opacity:.6;margin-bottom:10px}
+.shift-ta{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:9px;padding:9px;color:var(--cream);font-family:var(--fs);font-size:12px;resize:none;outline:none;min-height:70px}
+.shift-ta::placeholder{color:rgba(245,240,228,.4)}
+.shift-save{margin-top:9px;padding:9px;width:100%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:var(--cream);border-radius:9px;font-family:var(--fs);font-size:10px;font-weight:600;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:.2s}
+.shift-save:hover{background:rgba(255,255,255,.22)}
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--nh)+12px);left:50%;transform:translateX(-50%) translateY(16px);background:var(--forest);color:var(--cream);padding:9px 18px;border-radius:18px;font-size:11px;font-weight:600;opacity:0;transition:.3s;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3);pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* INFO BOX */
+.ib{background:rgba(37,99,168,.08);border:1px solid rgba(37,99,168,.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
+.ib p{font-size:11px;color:#1e40af;line-height:1.5}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.mo.open{opacity:1;pointer-events:all}
+.mdl{background:var(--white);border-radius:18px 18px 0 0;padding:20px 16px;width:100%;max-width:540px;max-height:85vh;overflow-y:auto;transform:translateY(40px);transition:transform .3s}
+.mo.open .mdl{transform:translateY(0)}
+.mh{width:36px;height:3px;background:rgba(0,0,0,.12);border-radius:2px;margin:0 auto 16px}
+.mt{font-family:var(--ff);font-size:20px;color:var(--forest);margin-bottom:14px}
+/* CALENDAR */
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.07)}
+.cal-nav{background:none;border:none;cursor:pointer;font-size:22px;color:var(--forest);padding:2px 8px;border-radius:6px;transition:.2s}
+.cal-nav:hover{background:var(--parch)}
+.cal-title{font-family:var(--ff);font-size:18px;color:var(--forest)}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--parch)}
+.cal-dow div{text-align:center;padding:7px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)}
+.cal-dow div:nth-child(6),.cal-dow div:nth-child(7){color:var(--red)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:rgba(0,0,0,.06)}
+.cd{background:var(--white);min-height:46px;padding:4px;cursor:pointer;border:2px solid transparent;transition:.15s}
+.cd:hover{background:var(--parch)}
+.cd.today{border-color:var(--gold)}
+.cd.sel{background:var(--fmid)}
+.cd.weekend .cdn{color:var(--red)}
+.cd.sel .cdn{color:var(--cream)}
+.cdn{font-size:12px;text-align:center;line-height:1.7;font-weight:400}
+.cd.today .cdn{font-weight:700}
+.cev{background:var(--moss);border-radius:3px;padding:1px 3px;font-size:8px;color:#fff;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cd.sel .cev{background:rgba(255,255,255,.3)}
+/* PREVIO */
+.previo-box{background:linear-gradient(135deg,var(--forest),var(--fmid));border-radius:14px;padding:16px;margin-bottom:14px;color:var(--cream)}
+.previo-box h3{font-family:var(--ff);font-size:15px;color:var(--goldl);margin-bottom:3px}
+.previo-box p{font-size:10px;opacity:.6;margin-bottom:12px}
+.previo-drop{border:2px dashed rgba(255,255,255,.3);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:.2s}
+.previo-drop:hover{border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.05)}
+.previo-status{font-size:11px;margin-top:10px;text-align:center;opacity:.8;min-height:16px}
+/* WEEK TABLE */
+.wt{width:100%;border-collapse:collapse;font-size:10px}
+.wt th{padding:6px 3px;background:var(--parch);font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--stone);text-align:center;border-bottom:2px solid var(--parch)}
+.wt th:first-child{text-align:left;padding-left:8px;min-width:82px}
+.wt td{padding:5px 3px;border-bottom:1px solid var(--parch);text-align:center;font-size:10px;font-weight:700;background:var(--white)}
+.wt td:first-child{text-align:left;padding-left:8px;font-weight:600;color:var(--forest)}
+.wt .th-today{background:var(--gold);color:var(--ink)}
+.wt .th-we{color:var(--red)}
+.wt .d-be{background:#fff8e1;color:#f57f17}
+.wt .d-ki{background:#fce4ec;color:var(--red)}
+.wt .d-occ{background:#e3f2fd;color:#1565c0}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="header-brand">
-    <h1>Malomerdő Panzió</h1>
-    <span>Belső rendszer</span>
-  </div>
-  <div class="header-date">
-    <strong id="hTime"></strong>
-    <span id="hDate"></span>
-  </div>
+<header class="hdr">
+  <div class="hdr-brand"><h1>Malomerdő Panzió</h1><small>Belső rendszer</small></div>
+  <div class="hdr-time"><strong id="hTime"></strong><span id="hDate"></span></div>
 </header>
 
-<!-- MAIN -->
 <main class="main">
 
-  <!-- ── DASHBOARD ─────────────────────────────────── -->
-  <section id="tab-dashboard" class="tab active">
+<!-- ── DASHBOARD ──────────────────────────────────────────────────────── -->
+<section id="tab-dashboard" class="tab active">
+  <div class="sg">
+    <div class="sc y"><div class="sc-lbl">☀️ Reggeli</div><div class="sc-val"><input type="number" id="sReg" value="0" min="0" max="60"></div><div class="sc-sub">főre terítünk</div></div>
+    <div class="sc ind"><div class="sc-lbl">🌙 Vacsora</div><div class="sc-val"><input type="number" id="sVac" value="0" min="0" max="60"></div><div class="sc-sub">főre számítunk</div></div>
+    <div class="sc g"><div class="sc-lbl">🛏️ Foglalt szoba</div><div class="sc-val" id="sFogl">0</div><div class="sc-sub">/ 14 szoba</div></div>
+    <div class="sc r"><div class="sc-lbl">🔑 Kiköltözés ma</div><div class="sc-val" id="sKi">0</div><div class="sc-sub">szoba takarítandó</div></div>
+  </div>
 
-    <div class="stat-grid">
-      <div class="stat-card yellow">
-        <div class="stat-label">☀️ Reggeli</div>
-        <div class="stat-val"><input type="number" id="statReggeli" value="28" min="0" max="50"></div>
-        <div class="stat-sub">főre terítünk</div>
-      </div>
-      <div class="stat-card indigo">
-        <div class="stat-label">🌙 Vacsora</div>
-        <div class="stat-val"><input type="number" id="statVacsora" value="14" min="0" max="50"></div>
-        <div class="stat-sub">főre számítunk</div>
-      </div>
-      <div class="stat-card green">
-        <div class="stat-label">🛏️ Foglalt szoba</div>
-        <div class="stat-val" id="statFoglalt">0</div>
-        <div class="stat-sub">/ 14 szoba</div>
-      </div>
-      <div class="stat-card red">
-        <div class="stat-label">🔑 Kiköltözés ma</div>
-        <div class="stat-val" id="statKikol">0</div>
-        <div class="stat-sub">szoba takarítandó</div>
-      </div>
-    </div>
+  <p class="sec">Közelgő programok – 7 nap</p>
+  <div id="evList"></div>
+  <button class="btn" onclick="openModal()">+ Új esemény rögzítése</button>
 
-    <p class="sec-label">Mai & közelgő programok</p>
+  <p class="sec" style="margin-top:18px">Műszakátadó</p>
+  <div class="shift-box">
+    <h3>Átadó feljegyzés</h3>
+    <p>A következő műszak számára – mentéskor azonnal látják</p>
+    <textarea class="shift-ta" id="shiftNote" placeholder="Különleges kérések, vendégmegjegyzések, elintézetlen feladatok..."></textarea>
+    <button class="shift-save" id="shiftBtn" onclick="saveShift()">Mentés & átadás</button>
+  </div>
+</section>
 
-    <div id="eventList"></div>
+<!-- ── SZOBÁK ─────────────────────────────────────────────────────────── -->
+<section id="tab-rooms" class="tab">
+  <div class="previo-box">
+    <h3>📥 Previo import</h3>
+    <p>Previo → Foglalások áttekintése → XLS export → feltöltés</p>
+    <label class="previo-drop" id="previoLbl">
+      <div style="font-size:22px;margin-bottom:4px">📊</div>
+      <div style="font-size:12px;font-weight:600;color:var(--cream)">Previo XLS feltöltése</div>
+      <div style="font-size:10px;opacity:.5;margin-top:2px">Automatikusan frissíti a szobákat és a reggeli/vacsora számot</div>
+      <input type="file" id="previoFile" accept="*/*" style="display:none" onchange="importPrevio(this)">
+    </label>
+    <div class="previo-status" id="previoStatus"></div>
+  </div>
 
-    <button class="btn btn-primary" onclick="openEventModal()">
-      + Új esemény rögzítése
-    </button>
+  <div class="ib"><span style="font-size:16px">ℹ️</span><p id="roomInfo">Szobastátuszok – koppintson a szobán a módosításhoz</p></div>
 
-    <p class="sec-label" style="margin-top:22px">Műszakátadó üzenet</p>
-    <div class="shift-note">
-      <h3>Átadó feljegyzés</h3>
-      <p>Mentve jelenik meg a következő műszak számára</p>
-      <textarea class="shift-textarea" id="shiftNote" placeholder="Különleges kérések, vendégek megjegyzései, el nem intézett feladatok..."></textarea>
-      <button class="shift-save" onclick="saveShift()">Mentés & átadás</button>
-    </div>
+  <div class="frow" id="filterRow">
+    <button class="fbtn active" onclick="filterRooms('all',this)">Mind</button>
+    <button class="fbtn" onclick="filterRooms('checkin',this)">🟡 Beköltözik</button>
+    <button class="fbtn" onclick="filterRooms('checkout',this)">🔴 Kiköltözik</button>
+    <button class="fbtn" onclick="filterRooms('clean',this)">🟢 Tiszta</button>
+    <button class="fbtn" onclick="filterRooms('occupied',this)">🔵 Foglalt</button>
+  </div>
+  <div id="roomList"></div>
+</section>
 
-  </section>
-
-  <!-- ── SZOBÁK ─────────────────────────────────────── -->
-  <section id="tab-rooms" class="tab">
-
-    <!-- Previo Import -->
-<div style="background:linear-gradient(135deg,var(--forest) 0%,var(--forest-mid) 100%);border-radius:16px;padding:16px;margin-bottom:14px;color:var(--cream)">
-  <div style="font-family:var(--ff-serif);font-size:16px;color:var(--gold-light);margin-bottom:4px">📥 Previo import</div>
-  <div style="font-size:11px;opacity:.6;margin-bottom:12px">Previo → Foglalások áttekintése → XLS export → feltöltés ide</div>
-  <label style="display:block;border:2px dashed rgba(255,255,255,.25);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:.2s" id="previoUploadLabel">
-    <div style="font-size:22px;margin-bottom:4px">📊</div>
-    <div style="font-size:12px;font-weight:600">Previo XLS feltöltése</div>
-    <div style="font-size:10px;opacity:.5;margin-top:2px">Automatikusan frissíti a szobákat</div>
-    <input type="file" id="previoFile" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,*/*" style="display:none" onchange="importPrevio(this)">
-  </label>
-  <div id="previoStatus" style="font-size:11px;margin-top:10px;text-align:center;opacity:.7"></div>
-</div>
-
-<div class="info-box">
-      <span style="font-size:18px">ℹ️</span>
-      <p>A mai rendezvény helyszínét (Étterem) <strong>13:00-ig</strong> ellenőrizni kell!</p>
-    </div>
-
-    <div class="filter-row">
-      <button class="btn-sm active" onclick="filterRooms('all', this)">Mind</button>
-      <button class="btn-sm" onclick="filterRooms('checkin', this)">🟡 Beköltözik</button>
-      <button class="btn-sm" onclick="filterRooms('checkout', this)">🔴 Kiköltözik</button>
-      <button class="btn-sm" onclick="filterRooms('clean', this)">🟢 Tiszta</button>
-      <button class="btn-sm" onclick="filterRooms('occupied', this)">🔵 Foglalt</button>
-    </div>
-
-    <div id="roomList"></div>
-
-  </section>
-
-  <!-- ── WELLNESS ───────────────────────────────────── -->
-  <section id="tab-wellness" class="tab">
-
-    <p class="sec-label">Jakuzzi – időpontok (09:00–21:00)</p>
-    <div class="card">
-      <div class="wellness-grid" id="jacuzziSlots"></div>
-    </div>
-
-    <p class="sec-label">Szauna – időpontok (09:00–21:00)</p>
-    <div class="card">
-      <div class="wellness-grid" id="saunaSlots"></div>
-    </div>
-
-    <p class="sec-label">Wellness foglalás rögzítése</p>
-    <div class="card">
-      <div class="form-group">
-        <label class="form-label">Vendég neve / szobaszám</label>
-        <input class="form-input" type="text" id="wGuestName" placeholder="pl. Kovács / 3. szoba">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Időpont</label>
-          <select class="form-select" id="wTime">
-            <option>09:00</option><option>10:00</option><option>11:00</option>
-            <option>12:00</option><option>13:00</option><option>14:00</option>
-            <option>15:00</option><option>16:00</option><option>17:00</option>
-            <option>18:00</option><option>19:00</option><option>20:00</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Létesítmény</label>
-          <select class="form-select" id="wType">
-            <option value="jacuzzi">Jakuzzi</option>
-            <option value="sauna">Szauna</option>
-            <option value="both">Mindkettő</option>
-          </select>
-        </div>
-      </div>
-      <button class="btn btn-primary" onclick="bookWellness()">Foglalás rögzítése</button>
-    </div>
-
-  </section>
-
-  <!-- ── NAPTÁR ───────────────────────────────────────── -->
-  <section id="tab-calendar" class="tab">
-    <p class="sec-label">Heti szobatáblázat</p>
-    <div class="week-legend">
-      <div class="week-legend-item"><div class="week-legend-dot" style="background:var(--forest-mid)"></div>Foglalt</div>
-      <div class="week-legend-item"><div class="week-legend-dot" style="background:#f57f17"></div>Beköltözik</div>
-      <div class="week-legend-item"><div class="week-legend-dot" style="background:var(--red)"></div>Kiköltözik</div>
-      <div class="week-legend-item"><div class="week-legend-dot" style="background:rgba(0,0,0,.08)"></div>Szabad</div>
-    </div>
-    <div style="overflow-x:auto;padding-bottom:8px">
-      <div id="weekCalendar" style="min-width:340px"></div>
-    </div>
-    <p class="sec-label" style="margin-top:20px">Összes esemény</p>
-    <div class="filter-row" id="calEventFilter">
-      <button class="btn-sm active" onclick="filterCalEvents('all',this)">Mind</button>
-      <button class="btn-sm" onclick="filterCalEvents('week',this)">7 nap</button>
-      <button class="btn-sm" onclick="filterCalEvents('month',this)">30 nap</button>
-    </div>
-    <div id="calEventList"></div>
-  </section>
-
-  <!-- ── RENDEZVÉNY ─────────────────────────────────── -->
-  <section id="tab-events" class="tab">
-    <div class="card">
-      <div class="card-title">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
-        Esemény rögzítése
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Rendezvény jellege</label>
-        <input class="form-input" type="text" id="evType" placeholder="pl. Esküvő, Konferencia, Születésnap">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Dátum</label>
-          <input class="form-input" type="date" id="evDate">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Időpont</label>
-          <input class="form-input" type="time" id="evTime">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Helyszín</label>
-          <select class="form-select" id="evPlace">
-            <option>Rendezvényház (80 fő)</option>
-            <option>Borospince (20 fő)</option>
-            <option>Étterem (30 fő)</option>
-            <option>Külső helyszín / Terasz</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Létszám (fő)</label>
-          <input class="form-input" type="number" id="evCount" placeholder="fő" min="1">
-        </div>
-      </div>
-
-      <hr class="gold">
-
-      <div class="form-group">
-        <label class="form-label">Catering igény</label>
-        <select class="form-select" id="evCatering">
-          <option>Nincs catering</option>
-          <option>Bekészítés (kávé, aprósütemény)</option>
-          <option>Tálak (sültes tál, hidegtál)</option>
-          <option>Teljes menüsor</option>
-          <option>Egyedi megbeszélés alapján</option>
+<!-- ── WELLNESS ───────────────────────────────────────────────────────── -->
+<section id="tab-wellness" class="tab">
+  <p class="sec">Jakuzzi – időpontok (09:00–21:00)</p>
+  <div class="card"><div class="wg" id="jacSlots"></div></div>
+  <p class="sec">Szauna – időpontok (09:00–21:00)</p>
+  <div class="card"><div class="wg" id="sauSlots"></div></div>
+  <p class="sec">Foglalás rögzítése</p>
+  <div class="card">
+    <div class="fg"><label class="fl">Vendég neve / szobaszám</label><input class="fi" type="text" id="wGuest" placeholder="pl. Kovács / 3. szoba"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Időpont</label>
+        <select class="fsel" id="wTime">
+          <option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option>
+          <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
+          <option>17:00</option><option>18:00</option><option>19:00</option><option>20:00</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">Részletes leírás / speciális kérések</label>
-        <textarea class="form-textarea" id="evNote" placeholder="Gluténmentes igények, tálak összetétele, italok..."></textarea>
+      <div class="fg"><label class="fl">Létesítmény</label>
+        <select class="fsel" id="wType">
+          <option value="jacuzzi">Jakuzzi</option>
+          <option value="sauna">Szauna</option>
+          <option value="both">Mindkettő</option>
+        </select>
       </div>
-
-      <div style="background:rgba(201,150,30,.08);border:1.5px solid rgba(201,150,30,.25);border-radius:14px;padding:14px;margin-bottom:14px">
-        <div class="checkbox-row">
-          <input type="checkbox" id="takeaway" onchange="toggleTakeaway()">
-          <label for="takeaway">🥡 Elvitelre kért tálak</label>
-        </div>
-        <div id="takeawayFields" style="display:none" class="form-row">
-          <div class="form-group">
-            <label class="form-label">Mikorra?</label>
-            <input class="form-input" type="time" id="evTakeawayTime">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Ki viszi el?</label>
-            <input class="form-input" type="text" id="evTakeawayWho" placeholder="Név">
-          </div>
-        </div>
-      </div>
-
-      <div class="photo-upload" onclick="document.getElementById('evPhoto').click()">
-        <div style="font-size:28px">📷</div>
-        <p>Fotó csatolása</p>
-        <span>Kézzel írt vázlat, tálalási minta</span>
-        <input type="file" id="evPhoto" accept="image/*" capture="camera" style="display:none" onchange="photoSelected(this)">
-      </div>
-      <div id="photoPreview" style="display:none;margin-bottom:14px">
-        <img id="photoImg" style="width:100%;border-radius:12px;max-height:200px;object-fit:cover">
-      </div>
-
-      <button class="btn btn-primary" onclick="saveEvent()">Esemény mentése</button>
     </div>
-  </section>
+    <button class="btn" onclick="bookWellness()">Foglalás rögzítése</button>
+  </div>
+</section>
 
-  <!-- NAPTÁR -->
-  <section id="tab-calendar" class="tab">
-    <div class="card" style="padding:0;overflow:hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(0,0,0,.07)">
-        <button onclick="calPrev()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--forest);padding:4px 8px">‹</button>
-        <div style="font-family:var(--ff-serif);font-size:18px;color:var(--forest)" id="calTitle"></div>
-        <button onclick="calNext()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--forest);padding:4px 8px">›</button>
-      </div>
-      <!-- Day headers -->
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--parchment)">
-        <div style="text-align:center;padding:8px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)">H</div>
-        <div style="text-align:center;padding:8px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)">K</div>
-        <div style="text-align:center;padding:8px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)">Sze</div>
-        <div style="text-align:center;padding:8px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)">Cs</div>
-        <div style="text-align:center;padding:8px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)">P</div>
-        <div style="text-align:center;padding:8px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red)">Szo</div>
-        <div style="text-align:center;padding:8px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red)">V</div>
-      </div>
-      <!-- Calendar grid -->
-      <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:rgba(0,0,0,.06)"></div>
+<!-- ── NAPTÁR ─────────────────────────────────────────────────────────── -->
+<section id="tab-calendar" class="tab">
+  <div class="card" style="padding:0;overflow:hidden">
+    <div class="cal-hdr">
+      <button class="cal-nav" onclick="calPrev()">‹</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button class="cal-nav" onclick="calNext()">›</button>
     </div>
+    <div class="cal-dow">
+      <div>H</div><div>K</div><div>Sze</div><div>Cs</div><div>P</div>
+      <div style="color:var(--red)">Szo</div><div style="color:var(--red)">V</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <div id="calDetail"></div>
 
-    <!-- Selected day events -->
-    <div id="calDayDetail" style="display:none;margin-top:14px"></div>
+  <p class="sec" style="margin-top:20px">🛏️ Szobák – heti foglaltság</p>
+  <div class="card" style="padding:0;overflow-x:auto">
+    <table class="wt" id="weekTable"></table>
+  </div>
+</section>
 
-    <!-- Rooms weekly view -->
-    <p class="sec-label" style="margin-top:20px">🛏️ Szobák – heti foglaltság</p>
-    <div id="roomWeekView" class="card" style="padding:0;overflow-x:auto"></div>
-  </section>
+<!-- ── RENDEZVÉNY ─────────────────────────────────────────────────────── -->
+<section id="tab-events" class="tab">
+  <div class="card">
+    <div class="card-title">Esemény rögzítése</div>
+    <div class="fg"><label class="fl">Rendezvény jellege</label><input class="fi" type="text" id="evType" placeholder="pl. Esküvő, Konferencia, Születésnap"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Dátum</label><input class="fi" type="date" id="evDate"></div>
+      <div class="fg"><label class="fl">Időpont</label><input class="fi" type="time" id="evTime"></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Helyszín</label>
+        <select class="fsel" id="evPlace">
+          <option>Rendezvényház (80 fő)</option><option>Borospince (20 fő)</option>
+          <option>Étterem (30 fő)</option><option>Külső helyszín / Terasz</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Létszám (fő)</label><input class="fi" type="number" id="evCount" placeholder="fő" min="1"></div>
+    </div>
+    <hr class="g">
+    <div class="fg"><label class="fl">Catering igény</label>
+      <select class="fsel" id="evCatering">
+        <option>Nincs catering</option><option>Bekészítés (kávé, aprósütemény)</option>
+        <option>Tálak (sültes tál, hidegtál)</option><option>Teljes menüsor</option>
+        <option>Egyedi megbeszélés alapján</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Részletes leírás / speciális kérések</label>
+      <textarea class="fta" id="evNote" placeholder="Gluténmentes igények, tálak összetétele, italok..."></textarea>
+    </div>
+    <div style="background:rgba(201,150,30,.08);border:1.5px solid rgba(201,150,30,.25);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div class="cbrow"><input type="checkbox" id="takeaway" onchange="toggleTA()"><label for="takeaway">🥡 Elvitelre kért tálak</label></div>
+      <div id="taFields" style="display:none" class="fr2">
+        <div class="fg"><label class="fl">Mikorra?</label><input class="fi" type="time" id="evTATime"></div>
+        <div class="fg"><label class="fl">Ki viszi el?</label><input class="fi" type="text" id="evTAWho" placeholder="Név"></div>
+      </div>
+    </div>
+    <button class="btn" onclick="saveEvent()">Esemény mentése</button>
+  </div>
+</section>
 
 </main>
 
 <!-- BOTTOM NAV -->
-<nav class="nav" style="--nav-btn-fs:7.5px">
-  <button class="nav-btn active" id="nav-dashboard" onclick="showTab('dashboard')">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
+<nav class="nav">
+  <button class="nb active" id="nb-dashboard" onclick="showTab('dashboard')">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
     Főoldal
   </button>
-  <button class="nav-btn" id="nav-rooms" onclick="showTab('rooms')">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+  <button class="nb" id="nb-rooms" onclick="showTab('rooms')">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
     Szobák
   </button>
-  <button class="nav-btn" id="nav-wellness" onclick="showTab('wellness')">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg>
+  <button class="nb" id="nb-wellness" onclick="showTab('wellness')">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.047 8.287 8.287 0 009 9.601a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.468 5.99 5.99 0 00-1.925 3.547 5.975 5.975 0 01-2.133-1.001A3.75 3.75 0 0012 18z"/></svg>
     Wellness
   </button>
-  <button class="nav-btn" id="nav-calendar" onclick="showTab('calendar')">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+  <button class="nb" id="nb-calendar" onclick="showTab('calendar')">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Naptár
   </button>
-  <button class="nav-btn" id="nav-events" onclick="showTab('events')">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+  <button class="nb" id="nb-events" onclick="showTab('events')">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
     Rögzítés
   </button>
 </nav>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
-<!-- Loading overlay -->
-<div id="loadingOverlay" style="position:fixed;inset:0;background:var(--forest);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-  <div style="font-family:var(--ff-serif);font-size:28px;color:var(--cream);letter-spacing:.5px">Malomerdő</div>
-  <div style="width:40px;height:40px;border:3px solid rgba(245,240,228,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite"></div>
-  <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,228,.4)">Betöltés...</div>
-  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-</div>
 
-<!-- EVENT MODAL (dashboard quick add) -->
-<div class="modal-overlay" id="eventModal" onclick="closeEventModal(event)">
-  <div class="modal">
-    <div class="modal-handle"></div>
-
-    <!-- Meglévő események listája -->
-    <div class="modal-title">Közelgő események</div>
-    <div id="modalEventList" style="margin-bottom:20px"></div>
-
-    <hr style="border:none;border-top:1px solid rgba(0,0,0,.08);margin:0 0 20px">
-
-    <!-- Új esemény rögzítése -->
-    <div style="font-family:var(--ff-serif);font-size:18px;color:var(--forest);margin-bottom:14px">+ Új esemény</div>
-    <div class="form-group">
-      <label class="form-label">Rendezvény neve</label>
-      <input class="form-input" type="text" id="qEvType" placeholder="pl. Születésnap, Borkóstoló">
+<!-- EVENT MODAL -->
+<div class="mo" id="evModal" onclick="closeModal(event)">
+  <div class="mdl">
+    <div class="mh"></div>
+    <div class="mt">Közelgő események</div>
+    <div id="modalEvList"></div>
+    <hr style="border:none;border-top:1px solid rgba(0,0,0,.08);margin:16px 0">
+    <div style="font-family:var(--ff);font-size:17px;color:var(--forest);margin-bottom:12px">+ Új esemény</div>
+    <div class="fg"><label class="fl">Rendezvény neve</label><input class="fi" type="text" id="qType" placeholder="pl. Születésnap, Borkóstoló"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Dátum</label><input class="fi" type="date" id="qDate"></div>
+      <div class="fg"><label class="fl">Időpont</label><input class="fi" type="time" id="qTime"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Dátum</label>
-        <input class="form-input" type="date" id="qEvDate">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Időpont</label>
-        <input class="form-input" type="time" id="qEvTime">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Helyszín</label>
-        <select class="form-select" id="qEvPlace">
-          <option>Rendezvényház</option>
-          <option>Borospince</option>
-          <option>Étterem</option>
-          <option>Terasz</option>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Helyszín</label>
+        <select class="fsel" id="qPlace">
+          <option>Rendezvényház</option><option>Borospince</option><option>Étterem</option><option>Terasz</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">Létszám</label>
-        <input class="form-input" type="number" id="qEvCount" placeholder="fő" min="1">
-      </div>
+      <div class="fg"><label class="fl">Létszám</label><input class="fi" type="number" id="qCount" placeholder="fő" min="1"></div>
     </div>
-    <button class="btn btn-primary" onclick="saveQuickEvent()">Mentés</button>
+    <button class="btn" onclick="saveQuick()">Mentés</button>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
-// ⚙️  SUPABASE KONFIGURÁCIÓ – ide írd be a saját adataidat!
-// ══════════════════════════════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://ztrrsewqikflamuncurh.supabase.co';   // ← Project URL
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0cnJzZXdxaWtmbGFtdW5jdXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0ODgyMDIsImV4cCI6MjA5MzA2NDIwMn0.oKRz_se7P5wl6cYJ-V7w8ee0i2N5hFsNv90G2BhKHxw';   // ← anon public key
-// ══════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// SUPABASE KONFIGURÁCIÓ
+// ══════════════════════════════════════════════════════════════
+const SURL = 'https://ztrrsewqikflamuncurh.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0cnJzZXdxaWtmbGFtdW5jdXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0ODgyMDIsImV4cCI6MjA5MzA2NDIwMn0.oKRz_se7P5wl6cYJ-V7w8ee0i2N5hFsNv90G2BhKHxw';
+const HDR = {'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=representation'};
 
-const API = `${SUPABASE_URL}/rest/v1`;
-const HEADERS = {
-  'apikey': SUPABASE_KEY,
-  'Authorization': `Bearer ${SUPABASE_KEY}`,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=representation'
+async function sb(path, opts) {
+  var res = await fetch(SURL+'/rest/v1'+path, Object.assign({headers:HDR}, opts||{}));
+  if (!res.ok) throw new Error(await res.text());
+  return res.status===204 ? null : res.json();
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+var STATE = {
+  rooms: [],
+  events: [],
+  wellness: [],
+  shift: '',
+  weeklyMap: {}
 };
 
-// ── HELYI STATE (gyors render, Supabase a valódi forrás) ────────────────────
-const STATE = { rooms: [], events: [], wellness: [], shift: '' };
+var DEFAULT_ROOMS = [
+  {id:1,building:'kastely',name:'Vadászház 1',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:2,building:'kastely',name:'Vadászház 2',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:3,building:'kastely',name:'Vadászház 11',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:4,building:'kastely',name:'Vadászház 12',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:5,building:'kastely',name:'Vadászház 14',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:6,building:'kastely',name:'Vadászház 15',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:7,building:'kastely',name:'Vadászház 16',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:8,building:'kastely',name:'Vadászház 17',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:9,building:'kastely',name:'Vadászház 21',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:10,building:'paraszthaz',name:'Parasztház 1',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:11,building:'paraszthaz',name:'Parasztház 2',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:12,building:'paraszthaz',name:'Parasztház 3',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:13,building:'paraszthaz',name:'Parasztház 4',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''},
+  {id:14,building:'paraszthaz',name:'Parasztház 5',guests:2,status:'clean',note:'',cleaning:'normal',checkin_date:'',checkout_date:''}
+];
 
-// ── SEGÉDFÜGGVÉNYEK ──────────────────────────────────────────────────────────
-function todayStr()    { return new Date().toISOString().slice(0,10); }
-function tomorrowStr() { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+var NAME_TO_ID = {
+  'Vadászház 1':1,'Vadászház 2':2,'Vadászház 11':3,'Vadászház 12':4,
+  'Vadászház 14':5,'Vadászház 15':6,'Vadászház 16':7,'Vadászház 17':8,'Vadászház 21':9,
+  'Parasztház 1':10,'Parasztház 2':11,'Parasztház 3':12,'Parasztház 4':13,'Parasztház 5':14
+};
 
-async function sbFetch(path, options={}) {
-  const res = await fetch(`${API}${path}`, { headers: HEADERS, ...options });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Supabase hiba: ${res.status} – ${err}`);
-  }
-  return res.status === 204 ? null : res.json();
-}
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function tomorrowStr() { var d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+function inDays(n) { var d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 
-// ── LOADING OVERLAY ──────────────────────────────────────────────────────────
-function setLoading(on) {
-  document.getElementById('loadingOverlay').style.display = on ? 'flex' : 'none';
-}
-
-// ── CLOCK ────────────────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById('hTime').textContent = now.toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit'});
-  document.getElementById('hDate').textContent = now.toLocaleDateString('hu-HU', {weekday:'long', month:'long', day:'numeric'});
-}
-updateClock();
-setInterval(updateClock, 30000);
-
-// ── TAB SWITCHING ────────────────────────────────────────────────────────────
-function showTab(id) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  document.getElementById('nav-' + id).classList.add('active');
-  if (id === 'rooms')     renderRooms('all');
-  if (id === 'dashboard') renderEvents();
-  if (id === 'wellness')  renderWellness();
-  if (id === 'calendar')  renderCalendar();
-  if (id === 'calendar')  { renderWeekCalendar(); renderCalEvents('all'); }
-}
-
-// ── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg) {
-  const el = document.getElementById('toast');
+  var el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2800);
+  setTimeout(function(){ el.classList.remove('show'); }, 2800);
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// SZOBÁK
-// ════════════════════════════════════════════════════════════════════════════
-async function loadRooms() {
-  const data = await sbFetch('/rooms?order=id');
-  if (data && data.length > 0) {
-    STATE.rooms = data;
-  } else {
-    // Első indítás: alapértelmezett szobák létrehozása
-    const defaults = [
-      { id:1,  building:'kastely',    name:'Vadászház 1',  guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:2,  building:'kastely',    name:'Vadászház 2',  guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:3,  building:'kastely',    name:'Vadászház 11', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:4,  building:'kastely',    name:'Vadászház 12', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:5,  building:'kastely',    name:'Vadászház 14', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:6,  building:'kastely',    name:'Vadászház 15', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:7,  building:'kastely',    name:'Vadászház 16', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:8,  building:'kastely',    name:'Vadászház 17', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:9,  building:'kastely',    name:'Vadászház 21', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:10, building:'paraszthaz', name:'Parasztház 1', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:11, building:'paraszthaz', name:'Parasztház 2', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:12, building:'paraszthaz', name:'Parasztház 3', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:13, building:'paraszthaz', name:'Parasztház 4', guests:2, status:'clean', note:'', cleaning:'normal' },
-      { id:14, building:'paraszthaz', name:'Parasztház 5', guests:2, status:'clean', note:'', cleaning:'normal' },
-    ];
-    const inserted = await sbFetch('/rooms', {
-      method: 'POST',
-      body: JSON.stringify(defaults)
-    });
-    STATE.rooms = inserted || defaults;
-  }
+// ══════════════════════════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════════════════════════
+function clock() {
+  var n = new Date();
+  document.getElementById('hTime').textContent = n.toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('hDate').textContent = n.toLocaleDateString('hu-HU',{weekday:'short',month:'long',day:'numeric'});
+}
+clock(); setInterval(clock, 30000);
+
+// ══════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('nb-'+id).classList.add('active');
+  if (id==='rooms')    renderRooms('all');
+  if (id==='wellness') renderWellness();
+  if (id==='calendar') renderCalendar();
+  if (id==='dashboard') renderEvents();
 }
 
-async function updateRoomInDB(id, changes) {
-  await sbFetch(`/rooms?id=eq.${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(changes)
-  });
+// ══════════════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════════════
+function updateStats() {
+  var occ = STATE.rooms.filter(function(r){ return r.status==='occupied'||r.status==='checkin'; }).length;
+  var ki  = STATE.rooms.filter(function(r){ return r.status==='checkout'; }).length;
+  document.getElementById('sFogl').textContent = occ;
+  document.getElementById('sKi').textContent = ki;
 }
 
-function renderRooms(filter) {
-  const list = document.getElementById('roomList');
-  const kastely    = STATE.rooms.filter(r => r.building === 'kastely');
-  const paraszthaz = STATE.rooms.filter(r => r.building === 'paraszthaz');
-  function rHTML(r) {
-    if (filter !== 'all' && r.status !== filter) return '';
-    const isCheckout = r.status === 'checkout';
-    const cleaning = r.cleaning || 'normal';
-    const cleanNormal = cleaning==='normal' ? 'background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7' : 'background:var(--cream);color:var(--stone);border-color:rgba(0,0,0,.1)';
-    const cleanDeep   = cleaning==='deep'   ? 'background:#fce4ec;color:#c62828;border-color:#ef9a9a' : 'background:var(--cream);color:var(--stone);border-color:rgba(0,0,0,.1)';
-    return `<div class="room-card" id="rc-${r.id}">
-      <div class="room-header">
-        <div>
-          <div class="room-name">${r.name}</div>
-          <div class="room-guests">
-            <input type="number" value="${r.guests}" min="1" max="6"
-              style="width:28px;border:none;background:none;font-size:11px;color:var(--stone);outline:none;font-family:var(--ff-sans)"
-              onchange="updateRoom(${r.id},'guests',this.value)"> fő
-          </div>
-        </div>
-        <select class="room-status-sel" data-status="${r.status}" onchange="updateRoomStatus(${r.id},this)">
-          <option value="clean"    ${r.status==='clean'   ?'selected':''}>🟢 Tiszta</option>
-          <option value="checkin"  ${r.status==='checkin' ?'selected':''}>🟡 Beköltözik</option>
-          <option value="checkout" ${r.status==='checkout'?'selected':''}>🔴 Kiköltözik</option>
-          <option value="occupied" ${r.status==='occupied'?'selected':''}>🔵 Foglalt</option>
-        </select>
-      </div>
-      ${isCheckout ? `<div style="display:flex;gap:8px;margin-top:4px">
-        <button onclick="setClean(${r.id},'normal')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;${cleanNormal}">🧹 Sima takarítás</button>
-        <button onclick="setClean(${r.id},'deep')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;${cleanDeep}">🧽 Végtakarítás</button>
-      </div>` : ''}
-      <textarea class="room-note" placeholder="Szobaasszony megjegyzése..."
-        onblur="updateRoom(${r.id},'note',this.value)">${r.note || ''}</textarea>
-    </div>`;
-  }
-  list.innerHTML =
-    `<div class="building-label">🏰 Vadászkastély (1–9. szoba)</div>` + kastely.map(rHTML).join('') +
-    `<div class="building-label">🏡 Parasztház (10–14. szoba)</div>`   + paraszthaz.map(rHTML).join('');
-  updateDashboardStats();
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// PREVIO IMPORT
-// ════════════════════════════════════════════════════════════════════════════
-async function importPrevio(input) {
-  if (!input.files || !input.files[0]) return;
-  const file = input.files[0];
-  const status = document.getElementById('previoStatus');
-  status.textContent = '⏳ Feldolgozás...';
-
-  try {
-    const buffer = await file.arrayBuffer();
-    const data = new Uint8Array(buffer);
-
-    if (typeof XLSX === 'undefined') {
-      await new Promise(function(resolve, reject) {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-        s.onload = resolve; s.onerror = reject;
-        document.head.appendChild(s);
-      });
-    }
-
-    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
-
-    // Find header row
-    let headerIdx = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i] && rows[i].some(function(c) { return String(c).includes('Szoba'); })) {
-        headerIdx = i; break;
-      }
-    }
-    if (headerIdx === -1) { status.textContent = '⚠️ Nem találom a fejlécsort!'; return; }
-
-    const headers = rows[headerIdx].map(function(h) { return String(h || '').trim(); });
-    const colKezdet    = headers.findIndex(function(h) { return h.includes('Kezdet'); });
-    const colVege      = headers.findIndex(function(h) { return h.includes('Vége'); });
-    const colSzoba     = headers.findIndex(function(h) { return h.includes('Szoba'); });
-    const colKapcsolat = headers.findIndex(function(h) { return h.includes('Kapcsolattartó') || h.includes('Kapcsolat'); });
-    const colFo        = headers.findIndex(function(h) { return h.includes('Résztvevők') || h.includes('Resztvevok'); });
-
-    const today    = todayStr();
-    const tomorrow = tomorrowStr();
-
-    // Parse date helper (format: "2026. 05. 07. 14:00")
-    function parseDate(str) {
-      const m = String(str).match(/(\d{4})\. (\d{2})\. (\d{2})/);
-      return m ? m[1] + '-' + m[2] + '-' + m[3] : '';
-    }
-
-    // Build map: roomName -> booking data
-    const previoMap = {};
-    for (let i = headerIdx + 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row || !row[colSzoba]) continue;
-      const szoba        = String(row[colSzoba] || '').trim();
-      const checkinDate  = parseDate(row[colKezdet]);
-      const checkoutDate = parseDate(row[colVege]);
-      const vendeg       = String(row[colKapcsolat] || '').trim();
-      const fo           = parseInt(row[colFo]) || 2;
-      if (!szoba || !checkinDate || !checkoutDate) continue;
-
-      // Only include active bookings (checkin <= today < checkout)
-      if (checkinDate > today || checkoutDate < today) continue;
-
-      let roomStatus = 'occupied';
-      if (checkinDate === today)  roomStatus = 'checkin';
-      if (checkoutDate === today) roomStatus = 'checkout';
-
-      previoMap[szoba] = {
-        vendeg, fo, checkinDate, checkoutDate, status: roomStatus
-      };
-    }
-
-    // Room name → DB id mapping
-    const nameToId = {
-      'Vadászház 1':1,'Vadászház 2':2,'Vadászház 11':3,'Vadászház 12':4,
-      'Vadászház 14':5,'Vadászház 15':6,'Vadászház 16':7,'Vadászház 17':8,
-      'Vadászház 21':9,'Parasztház 1':10,'Parasztház 2':11,
-      'Parasztház 3':12,'Parasztház 4':13,'Parasztház 5':14
-    };
-
-    // Build weekly schedule: roomId -> { [date]: status }
-    // Re-read ALL rows for weekly view (not just today)
-    const weeklyMap = {}; // roomId -> { checkinDate, checkoutDate, vendeg }
-    for (let i = headerIdx + 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row || !row[colSzoba]) continue;
-      const szoba        = String(row[colSzoba] || '').trim();
-      const checkinDate  = parseDate(row[colKezdet]);
-      const checkoutDate = parseDate(row[colVege]);
-      const vendeg       = String(row[colKapcsolat] || '').trim();
-      const fo           = parseInt(row[colFo]) || 2;
-      const id           = nameToId[szoba];
-      if (!id || !checkinDate || !checkoutDate) continue;
-      if (!weeklyMap[id]) weeklyMap[id] = [];
-      weeklyMap[id].push({ checkinDate, checkoutDate, vendeg, fo });
-    }
-
-    // Update rooms in DB and STATE
-    let updated = 0;
-    let totalGuestsToday = 0;
-    let totalGuestsTomorrow = 0;
-
-    for (const [szoba, data] of Object.entries(previoMap)) {
-      const id = nameToId[szoba];
-      if (!id) continue;
-      const room = STATE.rooms.find(function(r) { return r.id === id; });
-      if (!room) continue;
-      room.guests       = data.fo;
-      room.status       = data.status;
-      room.checkin_date  = data.checkinDate;
-      room.checkout_date = data.checkoutDate;
-      room.note         = data.vendeg ? data.vendeg + ' | ki: ' + data.checkoutDate : room.note;
-      await updateRoomInDB(id, {
-        guests: room.guests, status: room.status, note: room.note,
-        checkin_date: data.checkinDate, checkout_date: data.checkoutDate
-      });
-      updated++;
-      // Count guests for today (occupied or checkin = breakfast)
-      if (data.status === 'occupied' || data.status === 'checkin') {
-        totalGuestsToday += data.fo;
-      }
-      // Count guests staying tomorrow (checkout tomorrow or later = dinner tonight)
-      if (data.checkoutDate > today) {
-        totalGuestsTomorrow += data.fo;
-      }
-    }
-
-    // Store weekly schedule in STATE for room week view
-    STATE.weeklyMap = weeklyMap;
-
-    // Update breakfast/dinner counts automatically
-    const reggeliEl = document.getElementById('statReggeli');
-    const vacsoraEl = document.getElementById('statVacsora');
-    if (reggeliEl) reggeliEl.value = totalGuestsToday;
-    if (vacsoraEl) vacsoraEl.value = totalGuestsTomorrow;
-
-    // Reset non-imported rooms to clean
-    STATE.rooms.forEach(function(room) {
-      if (!previoMap[room.name]) {
-        room.status = 'clean';
-        room.checkin_date = '';
-        room.checkout_date = '';
-      }
-    });
-
-    renderRooms('all');
-    renderRoomWeek();
-    updateDashboardStats();
-    status.textContent = '✅ ' + updated + ' szoba frissítve | Reggeli: ' + totalGuestsToday + ' fő | Vacsora: ' + totalGuestsTomorrow + ' fő';
-    toast('✅ Previo import kész!');
-
-  } catch(e) {
-    console.error(e);
-    status.textContent = '⚠️ Hiba: ' + e.message;
-    toast('⚠️ Import hiba!');
-  }
-}
-
-async function setClean(id, type) {
-  const r = STATE.rooms.find(r => r.id === id);
-  if (!r) return;
-  r.cleaning = type;
-  await updateRoomInDB(id, { cleaning: type });
-  renderRooms(document.querySelector('.filter-row .btn-sm.active')?.textContent.trim() === 'Mind' ? 'all' :
-    document.querySelector('.filter-row .btn-sm.active')?.dataset?.filter || 'all');
-  toast(type === 'deep' ? '🧽 Végtakarítás jelölve' : '🧹 Sima takarítás jelölve');
-}
-
-async function updateRoom(id, key, val) {
-  const r = STATE.rooms.find(r => r.id === id);
-  if (!r) return;
-  r[key] = key === 'guests' ? parseInt(val) : val;
-  await updateRoomInDB(id, { [key]: r[key] });
-}
-
-async function updateRoomStatus(id, sel) {
-  sel.dataset.status = sel.value;
-  await updateRoom(id, 'status', sel.value);
-  updateDashboardStats();
-}
-
-function filterRooms(status, btn) {
-  document.querySelectorAll('.filter-row .btn-sm').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderRooms(status);
-}
-
-function updateDashboardStats() {
-  const occ = STATE.rooms.filter(r => r.status==='occupied'||r.status==='checkin').length;
-  const co  = STATE.rooms.filter(r => r.status==='checkout').length;
-  const f = document.getElementById('statFoglalt');
-  const k = document.getElementById('statKikol');
-  if (f) f.textContent = occ;
-  if (k) k.textContent = co;
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// ESEMÉNYEK
-// ════════════════════════════════════════════════════════════════════════════
-async function loadEvents() {
-  const data = await sbFetch('/events?order=date,time');
-  STATE.events = data || [];
-}
-
+// ══════════════════════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════════════════════
 function renderEvents() {
-  const list = document.getElementById('eventList');
-  const today = todayStr(), tomorrow = tomorrowStr();
-  // Only show next 7 days on dashboard
-  const in7days = new Date(); in7days.setDate(in7days.getDate() + 7);
-  const limit = in7days.toISOString().slice(0,10);
-  const sorted = [...STATE.events]
-    .filter(ev => ev.date >= today && ev.date <= limit)
-    .sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  var list = document.getElementById('evList');
+  var today = todayStr(), tomorrow = tomorrowStr(), limit = inDays(7);
+  var sorted = STATE.events
+    .filter(function(e){ return e.date >= today && e.date <= limit; })
+    .sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+
   if (!sorted.length) {
-    list.innerHTML = '<p style="color:var(--stone);font-size:13px;text-align:center;padding:20px 0">Nincs esemény a következő 7 napban</p>';
+    list.innerHTML = '<p style="color:var(--stone);font-size:13px;text-align:center;padding:20px 0">Nincs közelgő esemény a következő 7 napban</p>';
     return;
   }
-  list.innerHTML = sorted.map(ev => eventCardHTML(ev, true)).join('');
+  list.innerHTML = sorted.map(function(ev){
+    var urg='f', badge=ev.date;
+    if (ev.date===today)    { urg='u'; badge='MA'; }
+    else if (ev.date===tomorrow) { urg='s'; badge='HOLNAP'; }
+    return '<div class="ecard '+urg+'">'
+      +'<div style="flex:1">'
+      +'<span class="ebadge '+urg+'">'+badge+' '+ev.time+'</span>'
+      +'<div class="ename">'+ev.type+'</div>'
+      +'<div class="emeta">'+ev.place+' · '+ev.count+' fő</div>'
+      +(ev.catering && ev.catering!=='Nincs catering' ? '<div class="emeta" style="margin-top:3px">🍽 '+ev.catering+'</div>' : '')
+      +(ev.note ? '<div class="emeta" style="margin-top:3px;font-style:italic">'+ev.note+'</div>' : '')
+      +'</div>'
+      +'<button class="edel" onclick="delEvent('+ev.id+')">🗑</button>'
+      +'</div>';
+  }).join('');
 }
 
-function eventCardHTML(ev, showDelete) {
-  const today = todayStr(), tomorrow = tomorrowStr();
-  let urgency = 'upcoming', badge = ev.date;
-  if (ev.date === today)         { urgency = 'urgent'; badge = 'MA'; }
-  else if (ev.date === tomorrow) { urgency = 'soon';   badge = 'HOLNAP'; }
-  else {
-    const d = new Date(ev.date);
-    badge = d.toLocaleDateString('hu-HU', {month:'short', day:'numeric'});
-  }
-  return `<div class="event-card ${urgency}">
-    <div style="flex:1">
-      <span class="event-badge ${urgency}">${badge} ${ev.time}</span>
-      <div class="event-name">${ev.type}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
-        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:7px 8px">
-          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Helyszín</div>
-          <div style="font-size:12px;font-weight:600;color:var(--forest)">${ev.place}</div>
-        </div>
-        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:7px 8px">
-          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Létszám</div>
-          <div style="font-size:12px;font-weight:600;color:var(--forest)">${ev.count} fő</div>
-        </div>
-        ${ev.catering && ev.catering !== 'Nincs catering' ? `
-        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:7px 8px;grid-column:1/-1">
-          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div>
-          <div style="font-size:12px;color:var(--ink)">${ev.catering}</div>
-        </div>` : ''}
-        ${ev.note ? `
-        <div style="background:rgba(201,150,30,.08);border-radius:8px;padding:7px 8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)">
-          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div>
-          <div style="font-size:12px;color:var(--ink);font-style:italic">${ev.note}</div>
-        </div>` : ''}
-        ${ev.takeaway ? `
-        <div style="background:#fff8e1;border-radius:8px;padding:7px 8px;grid-column:1/-1;border:1px solid #ffe082">
-          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div>
-          <div style="font-size:12px;color:var(--ink)">${ev.takeaway_time||''} ${ev.takeaway_who ? '– '+ev.takeaway_who : ''}</div>
-        </div>` : ''}
-      </div>
-    </div>
-    ${showDelete ? `<button class="event-edit" onclick="deleteEvent(${ev.id})" title="Törlés" style="align-self:flex-start;margin-left:8px">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
-    </button>` : ''}
-  </div>`;
-}
-
-async function deleteEvent(id) {
+async function delEvent(id) {
   if (!confirm('Törli ezt az eseményt?')) return;
-  await sbFetch(`/events?id=eq.${id}`, { method: 'DELETE' });
-  STATE.events = STATE.events.filter(e => e.id !== id);
+  try { await sb('/events?id=eq.'+id,{method:'DELETE'}); } catch(e){}
+  STATE.events = STATE.events.filter(function(e){ return e.id!==id; });
   renderEvents();
+  renderModalEvents();
   toast('Esemény törölve');
 }
 
-function openEventModal() {
-  document.getElementById('qEvDate').value = todayStr();
+// ══════════════════════════════════════════════════════════════
+// EVENT MODAL
+// ══════════════════════════════════════════════════════════════
+function openModal() {
+  document.getElementById('qDate').value = todayStr();
   renderModalEvents();
-  document.getElementById('eventModal').classList.add('open');
+  document.getElementById('evModal').classList.add('open');
+}
+function closeModal(e) {
+  if (e.target===document.getElementById('evModal'))
+    document.getElementById('evModal').classList.remove('open');
 }
 
 function renderModalEvents() {
-  const list = document.getElementById('modalEventList');
-  const today = todayStr(), tomorrow = tomorrowStr();
-  const sorted = [...STATE.events].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
-
+  var list = document.getElementById('modalEvList');
+  var today = todayStr(), tomorrow = tomorrowStr();
+  var sorted = STATE.events.sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
   if (!sorted.length) {
-    list.innerHTML = '<p style="color:var(--stone);font-size:12px;text-align:center;padding:8px 0">Nincsenek rögzített események</p>';
+    list.innerHTML = '<p style="color:var(--stone);font-size:12px;text-align:center;padding:12px 0">Nincsenek rögzített események</p>';
     return;
   }
-
-  list.innerHTML = sorted.map(ev => {
-    let urgency = 'upcoming', badge = ev.date;
-    if (ev.date === today)    { urgency = 'urgent'; badge = 'MA'; }
-    else if (ev.date === tomorrow) { urgency = 'soon'; badge = 'HOLNAP'; }
-
-    const urgencyColors = {
-      urgent:   { bg: '#fff5f5', border: '#c0392b', badgeBg: '#fde8e8', badgeColor: '#c0392b' },
-      soon:     { bg: '#fff8f2', border: '#d4692a', badgeBg: '#fde8d4', badgeColor: '#d4692a' },
-      upcoming: { bg: '#f0f4ff', border: '#2563a8', badgeBg: '#dbeafe', badgeColor: '#2563a8' },
-    };
-    const c = urgencyColors[urgency];
-
-    return `<div style="background:${c.bg};border-left:4px solid ${c.border};border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div>
-          <span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:${c.badgeBg};color:${c.badgeColor}">${badge} ${ev.time}</span>
-          <div style="font-family:var(--ff-serif);font-size:17px;color:var(--ink);margin-top:5px">${ev.type}</div>
-        </div>
-        <button onclick="deleteEvent(${ev.id});renderModalEvents()" style="background:none;border:none;cursor:pointer;color:var(--stone);padding:4px;font-size:14px">🗑</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Helyszín</div>
-          <div style="font-size:13px;font-weight:600;color:var(--forest)">${ev.place}</div>
-        </div>
-        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Létszám</div>
-          <div style="font-size:13px;font-weight:600;color:var(--forest)">${ev.count} fő</div>
-        </div>
-        ${ev.catering && ev.catering !== 'Nincs catering' ? `
-        <div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px;grid-column:1/-1">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:3px">Catering</div>
-          <div style="font-size:12px;color:var(--ink)">${ev.catering}</div>
-        </div>` : ''}
-        ${ev.note ? `
-        <div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:3px">Megjegyzés</div>
-          <div style="font-size:12px;color:var(--ink);font-style:italic">${ev.note}</div>
-        </div>` : ''}
-        ${ev.takeaway ? `
-        <div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:3px">🥡 Elvitelre</div>
-          <div style="font-size:12px;color:var(--ink)">${ev.takeaway_time || ''} ${ev.takeaway_who ? '– ' + ev.takeaway_who : ''}</div>
-        </div>` : ''}
-      </div>
-    </div>`;
+  list.innerHTML = sorted.map(function(ev){
+    var urg='f', badge=ev.date;
+    if (ev.date===today)    { urg='u'; badge='MA'; }
+    else if (ev.date===tomorrow) { urg='s'; badge='HOLNAP'; }
+    var urgColors = {u:{bg:'#fff5f5',bc:'var(--red)',bb:'#fde8e8',bc2:'var(--red)'},s:{bg:'#fff8f2',bc:'var(--orange)',bb:'#fde8d4',bc2:'var(--orange)'},f:{bg:'#f0f4ff',bc:'var(--blue)',bb:'#dbeafe',bc2:'var(--blue)'}};
+    var c = urgColors[urg];
+    return '<div style="background:'+c.bg+';border-left:4px solid '+c.bc+';border-radius:12px;padding:14px;margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+      +'<div><span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:'+c.bb+';color:'+c.bc2+'">'+badge+' '+ev.time+'</span>'
+      +'<div style="font-family:var(--ff);font-size:17px;color:var(--ink);margin-top:5px">'+ev.type+'</div></div>'
+      +'<button onclick="delEvent('+ev.id+')" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--stone)">🗑</button></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Helyszín</div><div style="font-size:13px;font-weight:600;color:var(--forest)">'+ev.place+'</div></div>'
+      +'<div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Létszám</div><div style="font-size:13px;font-weight:600;color:var(--forest)">'+ev.count+' fő</div></div>'
+      +(ev.catering && ev.catering!=='Nincs catering' ? '<div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px;grid-column:1/-1"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div><div style="font-size:12px">'+ev.catering+'</div></div>' : '')
+      +(ev.note ? '<div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div><div style="font-size:12px;font-style:italic">'+ev.note+'</div></div>' : '')
+      +(ev.takeaway ? '<div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div><div style="font-size:12px">'+(ev.takeaway_time||'')+' '+(ev.takeaway_who?'– '+ev.takeaway_who:'')+'</div></div>' : '')
+      +'</div></div>';
   }).join('');
 }
-function closeEventModal(e) {
-  if (e.target === document.getElementById('eventModal'))
-    document.getElementById('eventModal').classList.remove('open');
-}
 
-async function saveQuickEvent() {
-  const type = document.getElementById('qEvType').value.trim();
+async function saveQuick() {
+  var type = document.getElementById('qType').value.trim();
   if (!type) { toast('⚠️ Adj meg rendezvény nevet!'); return; }
-  const ev = {
-    type,
-    date:  document.getElementById('qEvDate').value  || todayStr(),
-    time:  document.getElementById('qEvTime').value  || '00:00',
-    place: document.getElementById('qEvPlace').value,
-    count: parseInt(document.getElementById('qEvCount').value) || 0,
-    note: ''
-  };
-  const [inserted] = await sbFetch('/events', { method:'POST', body: JSON.stringify(ev) });
-  STATE.events.push(inserted);
-  renderEvents();
-  document.getElementById('eventModal').classList.remove('open');
-  document.getElementById('qEvType').value = '';
+  var ev = {type:type, date:document.getElementById('qDate').value||todayStr(),
+    time:document.getElementById('qTime').value||'00:00',
+    place:document.getElementById('qPlace').value,
+    count:parseInt(document.getElementById('qCount').value)||0, note:''};
+  try {
+    var res = await sb('/events',{method:'POST',body:JSON.stringify(ev)});
+    STATE.events.push(Array.isArray(res)?res[0]:res);
+  } catch(e) { toast('⚠️ Mentési hiba!'); return; }
+  renderEvents(); renderModalEvents();
+  document.getElementById('evModal').classList.remove('open');
+  document.getElementById('qType').value = '';
   toast('✅ Esemény mentve!');
 }
 
 async function saveEvent() {
-  const type = document.getElementById('evType').value.trim();
+  var type = document.getElementById('evType').value.trim();
   if (!type) { toast('⚠️ Add meg a rendezvény nevét!'); return; }
-  const ev = {
-    type,
-    date:         document.getElementById('evDate').value        || todayStr(),
-    time:         document.getElementById('evTime').value        || '00:00',
-    place:        document.getElementById('evPlace').value,
-    count:        parseInt(document.getElementById('evCount').value) || 0,
-    note:         document.getElementById('evNote').value.trim(),
-    catering:     document.getElementById('evCatering').value,
-    takeaway:     document.getElementById('takeaway').checked,
-    takeaway_time:document.getElementById('evTakeawayTime').value,
-    takeaway_who: document.getElementById('evTakeawayWho').value,
+  var ev = {
+    type:type, date:document.getElementById('evDate').value||todayStr(),
+    time:document.getElementById('evTime').value||'00:00',
+    place:document.getElementById('evPlace').value,
+    count:parseInt(document.getElementById('evCount').value)||0,
+    note:document.getElementById('evNote').value.trim(),
+    catering:document.getElementById('evCatering').value,
+    takeaway:document.getElementById('takeaway').checked,
+    takeaway_time:document.getElementById('evTATime').value,
+    takeaway_who:document.getElementById('evTAWho').value
   };
-  const [inserted] = await sbFetch('/events', { method:'POST', body: JSON.stringify(ev) });
-  STATE.events.push(inserted);
-  ['evType','evDate','evTime','evCount','evNote','evTakeawayTime','evTakeawayWho'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('takeaway').checked = false;
-  document.getElementById('takeawayFields').style.display = 'none';
-  document.getElementById('photoPreview').style.display = 'none';
+  try {
+    var res = await sb('/events',{method:'POST',body:JSON.stringify(ev)});
+    STATE.events.push(Array.isArray(res)?res[0]:res);
+  } catch(e) { toast('⚠️ Mentési hiba!'); return; }
+  ['evType','evDate','evTime','evCount','evNote','evTATime','evTAWho'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('takeaway').checked=false;
+  document.getElementById('taFields').style.display='none';
   toast('✅ Esemény mentve!');
   showTab('dashboard');
-  renderEvents();
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+function toggleTA() {
+  document.getElementById('taFields').style.display = document.getElementById('takeaway').checked ? 'grid' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+// ROOMS
+// ══════════════════════════════════════════════════════════════
+function renderRooms(filter) {
+  var list = document.getElementById('roomList');
+  var kastely    = STATE.rooms.filter(function(r){ return r.building==='kastely'; });
+  var paraszthaz = STATE.rooms.filter(function(r){ return r.building==='paraszthaz'; });
+
+  function rHTML(r) {
+    if (filter!=='all' && r.status!==filter) return '';
+    var isOut = r.status==='checkout';
+    var cl = r.cleaning||'normal';
+    return '<div class="rcard" id="rc-'+r.id+'">'
+      +'<div class="rhdr"><div>'
+      +'<div class="rname">'+r.name+'</div>'
+      +'<div class="rguests"><input type="number" value="'+r.guests+'" min="1" max="8" '
+      +'style="width:26px;border:none;background:none;font-size:10px;color:var(--stone);outline:none;font-family:var(--fs)" '
+      +'onchange="updRoom('+r.id+',\'guests\',this.value)"> fő</div>'
+      +'</div>'
+      +'<select class="rsel" data-s="'+r.status+'" onchange="updRoomStatus('+r.id+',this)">'
+      +'<option value="clean"'+(r.status==='clean'?' selected':'')+'>🟢 Tiszta</option>'
+      +'<option value="checkin"'+(r.status==='checkin'?' selected':'')+'>🟡 Beköltözik</option>'
+      +'<option value="checkout"'+(r.status==='checkout'?' selected':'')+'>🔴 Kiköltözik</option>'
+      +'<option value="occupied"'+(r.status==='occupied'?' selected':'')+'>🔵 Foglalt</option>'
+      +'</select></div>'
+      +(isOut ? '<div class="clean-btns">'
+        +'<button class="cbtn normal'+(cl==='normal'?' active':'')+'" onclick="setClean('+r.id+',\'normal\',this)">🧹 Sima takarítás</button>'
+        +'<button class="cbtn deep'+(cl==='deep'?' active':'')+'" onclick="setClean('+r.id+',\'deep\',this)">🧽 Végtakarítás</button>'
+        +'</div>' : '')
+      +'<textarea class="rnote" placeholder="Szobaasszony megjegyzése..." onblur="updRoom('+r.id+',\'note\',this.value)">'+( r.note||'')+'</textarea>'
+      +'</div>';
+  }
+
+  list.innerHTML =
+    '<div class="blbl">🏰 Vadászkastély (1–9. szoba)</div>' + kastely.map(rHTML).join('') +
+    '<div class="blbl">🏡 Parasztház (10–14. szoba)</div>'   + paraszthaz.map(rHTML).join('');
+  updateStats();
+}
+
+async function updRoom(id, key, val) {
+  var r = STATE.rooms.find(function(r){ return r.id===id; });
+  if (!r) return;
+  r[key] = key==='guests' ? parseInt(val) : val;
+  try { await sb('/rooms?id=eq.'+id,{method:'PATCH',body:JSON.stringify({[key]:r[key]})}); } catch(e){}
+}
+
+async function updRoomStatus(id, sel) {
+  sel.dataset.s = sel.value;
+  await updRoom(id,'status',sel.value);
+  // Re-render this card to show/hide clean buttons
+  var filter = document.querySelector('#filterRow .fbtn.active');
+  renderRooms(filter ? (filter.textContent.trim()==='Mind'?'all':filter.dataset.f||'all') : 'all');
+  updateStats();
+}
+
+async function setClean(id, type, btn) {
+  var r = STATE.rooms.find(function(r){ return r.id===id; });
+  if (!r) return;
+  r.cleaning = type;
+  try { await sb('/rooms?id=eq.'+id,{method:'PATCH',body:JSON.stringify({cleaning:type})}); } catch(e){}
+  // Update button styles
+  var card = document.getElementById('rc-'+id);
+  if (card) {
+    card.querySelectorAll('.cbtn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+  }
+  toast(type==='deep' ? '🧽 Végtakarítás jelölve' : '🧹 Sima takarítás jelölve');
+}
+
+function filterRooms(status, btn) {
+  document.querySelectorAll('.fbtn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderRooms(status);
+}
+
+// ══════════════════════════════════════════════════════════════
 // WELLNESS
-// ════════════════════════════════════════════════════════════════════════════
-const SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
-
-async function loadWellness() {
-  const data = await sbFetch(`/wellness?date=eq.${todayStr()}`);
-  STATE.wellness = data || [];
-}
+// ══════════════════════════════════════════════════════════════
+var SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 
 function renderWellness() {
-  ['jacuzzi','sauna'].forEach(type => {
-    const cont = document.getElementById(type + 'Slots');
-    cont.innerHTML = SLOTS.map(t => {
-      const entry = STATE.wellness.find(w => w.type === type && w.time === t);
-      return `<div class="wslot ${entry ? 'booked' : 'free'}" onclick="toggleWSlot('${type}','${t}')">
-        <div class="wslot-time">${t}</div>
-        <div class="wslot-label">${entry ? entry.guest : 'Szabad'}</div>
-      </div>`;
+  ['jacuzzi','sauna'].forEach(function(type) {
+    var cont = document.getElementById(type==='jacuzzi'?'jacSlots':'sauSlots');
+    cont.innerHTML = SLOTS.map(function(t){
+      var entry = STATE.wellness.find(function(w){ return w.type===type && w.time===t; });
+      return '<div class="ws '+(entry?'booked':'free')+'" onclick="toggleSlot(\''+type+'\',\''+t+'\')">'
+        +'<div class="ws-t">'+t+'</div>'
+        +'<div class="ws-l">'+(entry?entry.guest:'Szabad')+'</div>'
+        +'</div>';
     }).join('');
   });
 }
 
-async function toggleWSlot(type, time) {
-  const entry = STATE.wellness.find(w => w.type === type && w.time === time);
+async function toggleSlot(type, time) {
+  var entry = STATE.wellness.find(function(w){ return w.type===type && w.time===time; });
   if (entry) {
     if (!confirm('Törli a foglalást?')) return;
-    await sbFetch(`/wellness?id=eq.${entry.id}`, { method: 'DELETE' });
-    STATE.wellness = STATE.wellness.filter(w => w.id !== entry.id);
+    try { await sb('/wellness?id=eq.'+entry.id,{method:'DELETE'}); } catch(e){}
+    STATE.wellness = STATE.wellness.filter(function(w){ return w.id!==entry.id; });
     renderWellness();
     toast('Foglalás törölve');
   }
 }
 
 async function bookWellness() {
-  const guest = document.getElementById('wGuestName').value.trim();
-  const time  = document.getElementById('wTime').value;
-  const type  = document.getElementById('wType').value;
+  var guest = document.getElementById('wGuest').value.trim();
+  var time  = document.getElementById('wTime').value;
+  var type  = document.getElementById('wType').value;
   if (!guest) { toast('⚠️ Add meg a vendég nevét!'); return; }
-  const types = type === 'both' ? ['jacuzzi','sauna'] : [type];
-  for (const t of types) {
-    const existing = STATE.wellness.find(w => w.type === t && w.time === time);
-    if (existing) { toast(`⚠️ ${time} már foglalt (${t})!`); continue; }
-    const [inserted] = await sbFetch('/wellness', {
-      method: 'POST',
-      body: JSON.stringify({ type: t, time, guest, date: todayStr() })
-    });
-    STATE.wellness.push(inserted);
+  var types = type==='both' ? ['jacuzzi','sauna'] : [type];
+  for (var i=0; i<types.length; i++) {
+    var t = types[i];
+    var existing = STATE.wellness.find(function(w){ return w.type===t && w.time===time; });
+    if (existing) { toast('⚠️ '+time+' már foglalt ('+t+')!'); continue; }
+    try {
+      var res = await sb('/wellness',{method:'POST',body:JSON.stringify({type:t,time:time,guest:guest,date:todayStr()})});
+      STATE.wellness.push(Array.isArray(res)?res[0]:res);
+    } catch(e) { toast('⚠️ Mentési hiba!'); }
   }
   renderWellness();
-  document.getElementById('wGuestName').value = '';
+  document.getElementById('wGuest').value='';
   toast('✅ Wellness foglalás mentve!');
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════════════════════════
-// NAPTÁR
-// ════════════════════════════════════════════════════════════════════════════
-function getWeekDates() {
-  const dates = [];
-  const today = new Date();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    dates.push(d.toISOString().slice(0,10));
-  }
-  return dates;
-}
+// ══════════════════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════════════════
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+var calSelDate = null;
+var MONTHS = ['Január','Február','Március','Április','Május','Június','Július','Augusztus','Szeptember','Október','November','December'];
 
-function renderWeekCalendar() {
-  const cal = document.getElementById('weekCalendar');
-  const dates = getWeekDates();
-  const today = todayStr();
-  const dayNames = ['V','H','K','Sze','Cs','P','Szo'];
-
-  // Header
-  let html = '<div class="week-header">';
-  html += '<div class="week-day"></div>';
-  dates.forEach(d => {
-    const dn = new Date(d);
-    const name = dayNames[dn.getDay()];
-    const num  = dn.getDate();
-    const isToday = d === today;
-    html += `<div class="week-day${isToday?' today':''}">${name}<br><strong>${num}</strong></div>`;
-  });
-  html += '</div>';
-
-  // Room rows
-  STATE.rooms.forEach(r => {
-    html += '<div class="week-row">';
-    html += `<div class="week-room-label">${r.name.replace('Vadászház','V').replace('Parasztház','P')}</div>`;
-    dates.forEach(d => {
-      // Check if room has info for this date from note
-      let status = 'clean';
-      let label = '';
-      if (r.note && r.note.includes('ki:')) {
-        const checkoutMatch = r.note.match(/ki: (\d{4}-\d{2}-\d{2})/);
-        if (checkoutMatch) {
-          const checkout = checkoutMatch[1];
-          // Estimate checkin from status
-          if (d < checkout && d >= today) status = 'occupied';
-          if (d === checkout) { status = 'checkout'; label = 'Ki'; }
-        }
-      }
-      if (d === today && r.status === 'checkin')  { status = 'checkin';  label = 'Be'; }
-      if (d === today && r.status === 'checkout') { status = 'checkout'; label = 'Ki'; }
-      if (d === today && r.status === 'occupied') { status = 'occupied'; }
-      html += `<div class="week-cell ${status}">${label ? `<div class="week-cell-label">${label}</div>` : ''}</div>`;
-    });
-    html += '</div>';
-  });
-
-  cal.innerHTML = html;
-}
-
-function renderCalEvents(filter) {
-  const list = document.getElementById('calEventList');
-  const today = todayStr();
-  let events = [...STATE.events].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
-
-  if (filter === 'week') {
-    const in7 = new Date(); in7.setDate(in7.getDate()+7);
-    events = events.filter(ev => ev.date >= today && ev.date <= in7.toISOString().slice(0,10));
-  } else if (filter === 'month') {
-    const in30 = new Date(); in30.setDate(in30.getDate()+30);
-    events = events.filter(ev => ev.date >= today && ev.date <= in30.toISOString().slice(0,10));
-  }
-
-  if (!events.length) {
-    list.innerHTML = '<p style="color:var(--stone);font-size:13px;text-align:center;padding:16px 0">Nincs esemény ebben az időszakban</p>';
-    return;
-  }
-  list.innerHTML = events.map(ev => eventCardHTML(ev, true)).join('');
-}
-
-function filterCalEvents(filter, btn) {
-  document.querySelectorAll('#calEventFilter .btn-sm').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCalEvents(filter);
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// AUTO-TÖRLÉS (60 nap után)
-// ════════════════════════════════════════════════════════════════════════════
-async function autoDeleteOldEvents() {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 60);
-  const cutoffStr = cutoff.toISOString().slice(0,10);
-  try {
-    await sbFetch(`/events?date=lt.${cutoffStr}`, { method: 'DELETE' });
-    STATE.events = STATE.events.filter(e => e.date >= cutoffStr);
-  } catch(e) { console.log('Auto-delete skipped:', e.message); }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// NAPTÁR
-// ════════════════════════════════════════════════════════════════════════════
-let calYear = new Date().getFullYear();
-let calMonth = new Date().getMonth();
-let calSelectedDate = null;
-
-function calPrev() {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderCalendar();
-}
-function calNext() {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderCalendar();
-}
+function calPrev() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
 
 function renderCalendar() {
-  const months = ['Január','Február','Március','Április','Május','Június','Július','Augusztus','Szeptember','Október','November','December'];
-  document.getElementById('calTitle').textContent = `${calYear}. ${months[calMonth]}`;
+  document.getElementById('calTitle').textContent = calYear+'. '+MONTHS[calMonth];
+  var grid = document.getElementById('calGrid');
+  var today = todayStr();
+  var firstDow = new Date(calYear, calMonth, 1).getDay();
+  var daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  firstDow = firstDow===0 ? 6 : firstDow-1; // Monday-based
 
-  const grid = document.getElementById('calGrid');
-  const firstDay = new Date(calYear, calMonth, 1);
-  const lastDay  = new Date(calYear, calMonth+1, 0);
-  const today    = todayStr();
+  // Build event map
+  var evMap = {};
+  STATE.events.forEach(function(ev){ if(!evMap[ev.date])evMap[ev.date]=[]; evMap[ev.date].push(ev); });
 
-  // Monday-based offset
-  let startDow = firstDay.getDay(); // 0=Sun
-  startDow = startDow === 0 ? 6 : startDow - 1;
-
-  // Build event date set
-  const eventDates = {};
-  STATE.events.forEach(ev => {
-    if (!eventDates[ev.date]) eventDates[ev.date] = [];
-    eventDates[ev.date].push(ev);
-  });
-
-  let html = '';
-  // Empty cells before first day
-  for (let i = 0; i < startDow; i++) {
-    html += `<div style="background:var(--white);min-height:44px;padding:4px"></div>`;
-  }
-  // Day cells
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isToday    = dateStr === today;
-    const isSelected = dateStr === calSelectedDate;
-    const evs        = eventDates[dateStr] || [];
-    const dow        = (startDow + d - 1) % 7; // 5=Sat,6=Sun
-    const isWeekend  = dow === 5 || dow === 6;
-
-    html += `<div onclick="calSelectDay('${dateStr}')" style="
-      background:${isSelected ? 'var(--forest-mid)' : 'var(--white)'};
-      min-height:44px;padding:4px;cursor:pointer;position:relative;
-      border:${isToday ? '2px solid var(--gold)' : '2px solid transparent'};
-      transition:.15s">
-      <div style="font-size:12px;font-weight:${isToday?'700':'400'};
-        color:${isSelected?'var(--cream)':isWeekend?'var(--red)':'var(--ink)'};
-        text-align:center;line-height:1.6">${d}</div>
-      ${evs.map(e => `<div style="background:${isSelected?'rgba(255,255,255,.25)':'var(--moss)'};border-radius:3px;margin-top:2px;padding:1px 3px;font-size:8px;color:${isSelected?'var(--cream)':'#fff'};overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${e.type}</div>`).join('')}
-    </div>`;
+  var html = '';
+  for (var i=0; i<firstDow; i++) html += '<div class="cd"></div>';
+  for (var d=1; d<=daysInMonth; d++) {
+    var mm = String(calMonth+1).padStart(2,'0');
+    var dd = String(d).padStart(2,'0');
+    var ds = calYear+'-'+mm+'-'+dd;
+    var dow = (firstDow+d-1)%7;
+    var cls = 'cd';
+    if (ds===today) cls+=' today';
+    if (ds===calSelDate) cls+=' sel';
+    if (dow>=5) cls+=' weekend';
+    var evs = evMap[ds]||[];
+    html += '<div class="'+cls+'" onclick="calSelect(\''+ds+'\')"><div class="cdn">'+d+'</div>'
+      +evs.slice(0,2).map(function(e){ return '<div class="cev">'+e.type+'</div>'; }).join('')
+      +'</div>';
   }
   grid.innerHTML = html;
-
-  // Render room week view
-  renderRoomWeek();
+  renderWeekTable();
 }
 
-function calSelectDay(dateStr) {
-  calSelectedDate = dateStr;
+function calSelect(ds) {
+  calSelDate = ds;
   renderCalendar();
-
-  const detail = document.getElementById('calDayDetail');
-  const evs = STATE.events.filter(e => e.date === dateStr);
-
+  var det = document.getElementById('calDetail');
+  var evs = STATE.events.filter(function(e){ return e.date===ds; });
+  det.innerHTML = '';
   if (!evs.length) {
-    detail.style.display = 'block';
-    detail.innerHTML = `<div class="card" style="text-align:center;color:var(--stone);font-size:13px;padding:20px">
-      Ezen a napon nincs rögzített esemény
-      <br><button onclick="document.getElementById('qEvDate').value='${dateStr}';openEventModal()" 
-        style="margin-top:12px;background:var(--forest-mid);color:var(--cream);border:none;border-radius:10px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase">
-        + Esemény rögzítése
-      </button>
-    </div>`;
+    det.innerHTML = '<div class="card" style="text-align:center;color:var(--stone);font-size:13px;padding:20px">'
+      +'Ezen a napon nincs esemény<br>'
+      +'<button onclick="document.getElementById(\'qDate\').value=\''+ds+'\';openModal()" '
+      +'style="margin-top:12px;background:var(--fmid);color:var(--cream);border:none;border-radius:10px;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px">+ Esemény</button></div>';
     return;
   }
-
-  detail.style.display = 'block';
-  detail.innerHTML = `<p class="sec-label">${dateStr} – Események</p>` +
-    evs.map(ev => `
-    <div class="card" style="margin-bottom:10px;position:relative">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div>
-          <div style="font-family:var(--ff-serif);font-size:18px;color:var(--forest)">${ev.type}</div>
-          <div style="font-size:11px;color:var(--stone);margin-top:2px">${ev.time} · ${ev.place}</div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button onclick="openEditEvent(${ev.id})" style="background:var(--parchment);border:none;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer;color:var(--forest)">✏️ Szerk.</button>
-          <button onclick="deleteEvent(${ev.id});calSelectDay('${dateStr}')" style="background:#fce4ec;border:none;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer;color:var(--red)">🗑</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="background:var(--cream);border-radius:8px;padding:8px">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Létszám</div>
-          <div style="font-size:14px;font-weight:600;color:var(--forest)">${ev.count} fő</div>
-        </div>
-        <div style="background:var(--cream);border-radius:8px;padding:8px">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div>
-          <div style="font-size:11px;color:var(--ink)">${ev.catering || '–'}</div>
-        </div>
-        ${ev.note ? `<div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div>
-          <div style="font-size:12px;font-style:italic">${ev.note}</div>
-        </div>` : ''}
-        ${ev.takeaway ? `<div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082">
-          <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div>
-          <div style="font-size:12px">${ev.takeaway_time || ''} ${ev.takeaway_who ? '– '+ev.takeaway_who : ''}</div>
-        </div>` : ''}
-      </div>
-    </div>`).join('');
+  var html = '<p class="sec">'+ds+' – Események</p>';
+  evs.forEach(function(ev){
+    html += '<div class="card" style="margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+      +'<div><div style="font-family:var(--ff);font-size:18px;color:var(--forest)">'+ev.type+'</div>'
+      +'<div style="font-size:11px;color:var(--stone);margin-top:2px">'+ev.time+' · '+ev.place+'</div></div>'
+      +'<button onclick="delEvent('+ev.id+')" style="background:#fce4ec;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:var(--red)">🗑</button>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div style="background:var(--cream);border-radius:8px;padding:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Létszám</div><div style="font-size:14px;font-weight:600;color:var(--forest)">'+ev.count+' fő</div></div>'
+      +'<div style="background:var(--cream);border-radius:8px;padding:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div><div style="font-size:11px">'+( ev.catering||'–')+'</div></div>'
+      +(ev.note ? '<div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div><div style="font-size:12px;font-style:italic">'+ev.note+'</div></div>' : '')
+      +(ev.takeaway ? '<div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div><div style="font-size:12px">'+(ev.takeaway_time||'')+' '+(ev.takeaway_who?'– '+ev.takeaway_who:'')+'</div></div>' : '')
+      +'</div></div>';
+  });
+  det.innerHTML = html;
 }
 
-// Edit event modal
-function openEditEvent(id) {
-  const ev = STATE.events.find(e => e.id === id);
-  if (!ev) return;
-  // Pre-fill the events form and switch to that tab
-  document.getElementById('evType').value  = ev.type;
-  document.getElementById('evDate').value  = ev.date;
-  document.getElementById('evTime').value  = ev.time;
-  document.getElementById('evPlace').value = ev.place;
-  document.getElementById('evCount').value = ev.count;
-  document.getElementById('evNote').value  = ev.note || '';
-  document.getElementById('evCatering').value = ev.catering || 'Nincs catering';
-  // Delete old and re-save on submit (simplest approach)
-  window._editingEventId = id;
-  showTab('events');
-  toast('Szerkesztés – módosítás után mentse el!');
-}
+// ══════════════════════════════════════════════════════════════
+// ROOM WEEK TABLE
+// ══════════════════════════════════════════════════════════════
+function renderWeekTable() {
+  var tbl = document.getElementById('weekTable');
+  if (!tbl) return;
+  var days = [];
+  for (var i=0; i<7; i++) { var d=new Date(); d.setDate(d.getDate()+i); days.push(d.toISOString().slice(0,10)); }
+  var DOW = ['V','H','K','Sze','Cs','P','Szo'];
+  var today = todayStr();
 
-// Room weekly view
-function renderRoomWeek() {
-  const cont = document.getElementById('roomWeekView');
-  if (!cont) return;
-  const today = new Date();
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    days.push(d.toISOString().slice(0,10));
-  }
-  const dowNames = ['V','H','K','Sze','Cs','P','Szo'];
-  const weeklyMap = STATE.weeklyMap || {};
-
-  let html = '<table style="width:100%;border-collapse:collapse;font-size:10px;min-width:320px"><thead><tr>'
-    + '<th style="padding:8px 6px;background:var(--parchment);text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--stone);min-width:80px;position:sticky;left:0">Szoba</th>';
-
-  days.forEach(function(d) {
-    const dow = new Date(d).getDay();
-    const isW = dow === 0 || dow === 6;
-    const isT = d === todayStr();
-    html += '<th style="padding:6px 4px;background:' + (isT ? 'var(--gold)' : 'var(--parchment)') + ';text-align:center;min-width:38px;color:' + (isT ? 'var(--ink)' : isW ? 'var(--red)' : 'var(--stone)') + ';font-size:9px">'
-          + d.slice(8) + '<br><span style="font-weight:400">' + dowNames[dow] + '</span></th>';
+  var html = '<thead><tr><th>Szoba</th>';
+  days.forEach(function(d){
+    var dow = new Date(d).getDay();
+    var isW = dow===0||dow===6;
+    var isT = d===today;
+    html += '<th class="'+(isT?'th-today':isW?'th-we':'')+'">'
+      +d.slice(8)+'<br><span style="font-weight:400">'+DOW[dow]+'</span></th>';
   });
   html += '</tr></thead><tbody>';
 
-  STATE.rooms.forEach(function(r) {
-    const bookings = weeklyMap[r.id] || [];
-    html += '<tr><td style="padding:5px 6px;background:var(--white);font-weight:600;font-size:10px;color:var(--forest);border-bottom:1px solid var(--parchment);position:sticky;left:0">' + r.name + '</td>';
-
-    days.forEach(function(d) {
-      // Find booking that covers this day
-      let bg = 'var(--white)', label = '', color = 'var(--ink)';
-      const booking = bookings.find(function(b) {
-        return b.checkinDate <= d && b.checkoutDate > d;
-      });
-      if (booking) {
-        if (booking.checkinDate === d)  { bg = '#fff8e1'; label = 'Be'; color = '#f57f17'; }
-        else if (booking.checkoutDate === d) { bg = '#fce4ec'; label = 'Ki'; color = 'var(--red)'; }
-        else { bg = '#e3f2fd'; label = '●'; color = '#1565c0'; }
+  STATE.rooms.forEach(function(r){
+    var bookings = STATE.weeklyMap[r.id]||[];
+    html += '<tr><td>'+r.name+'</td>';
+    days.forEach(function(d){
+      var bk = bookings.find(function(b){ return b.checkinDate<=d && b.checkoutDate>d; });
+      var cls='', lbl='';
+      if (bk) {
+        if (bk.checkinDate===d)       { cls='d-be'; lbl='Be'; }
+        else if (bk.checkoutDate===d) { cls='d-ki'; lbl='Ki'; }
+        else                           { cls='d-occ'; lbl='●'; }
+      } else if (d===today) {
+        if (r.status==='checkout')      { cls='d-ki'; lbl='Ki'; }
+        else if (r.status==='checkin')  { cls='d-be'; lbl='Be'; }
+        else if (r.status==='occupied') { cls='d-occ'; lbl='●'; }
       }
-      // Also check current room status for today if no weeklyMap data
-      if (!booking && d === todayStr()) {
-        if (r.status === 'checkout')      { bg = '#fce4ec'; label = 'Ki'; color = 'var(--red)'; }
-        else if (r.status === 'checkin')  { bg = '#fff8e1'; label = 'Be'; color = '#f57f17'; }
-        else if (r.status === 'occupied') { bg = '#e3f2fd'; label = '●'; color = '#1565c0'; }
-      }
-      html += '<td style="padding:4px 2px;background:' + bg + ';text-align:center;border-bottom:1px solid var(--parchment);border-left:1px solid var(--parchment);font-size:10px;font-weight:700;color:' + color + '">' + label + '</td>';
+      html += '<td class="'+cls+'">'+lbl+'</td>';
     });
     html += '</tr>';
   });
-  html += '</tbody></table>';
-  cont.innerHTML = html;
+  html += '</tbody>';
+  tbl.innerHTML = html;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// MŰSZAKÁTADÓ – javított mentés
-// ════════════════════════════════════════════════════════════════════════════
-async function saveShift() {
-  const message = document.getElementById('shiftNote').value.trim();
-  if (!message) { toast('⚠️ Írj be valamit az átadóba!'); return; }
+// ══════════════════════════════════════════════════════════════
+// PREVIO IMPORT
+// ══════════════════════════════════════════════════════════════
+async function importPrevio(input) {
+  if (!input.files||!input.files[0]) return;
+  var status = document.getElementById('previoStatus');
+  status.textContent = '⏳ Feldolgozás...';
   try {
-    await sbFetch('/shift', {
-      method: 'POST',
-      headers: { ...HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({ id: 1, message, updated_at: new Date().toISOString() })
-    });
-    STATE.shift = message;
-    toast('✅ Műszakátadó elmentve!');
-    // Visual feedback - green border
-    const ta = document.getElementById('shiftNote');
-    ta.style.borderColor = 'var(--gold-light)';
-    setTimeout(() => ta.style.borderColor = '', 2000);
+    var buffer = await input.files[0].arrayBuffer();
+    if (typeof XLSX==='undefined') {
+      await new Promise(function(res,rej){
+        var s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload=res; s.onerror=rej; document.head.appendChild(s);
+      });
+    }
+    var wb = XLSX.read(new Uint8Array(buffer),{type:'array',cellDates:true});
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false});
+
+    // Find header
+    var hi=-1;
+    for (var i=0;i<rows.length;i++) {
+      if (rows[i]&&rows[i].some(function(c){ return String(c).includes('Szoba'); })) { hi=i; break; }
+    }
+    if (hi===-1) { status.textContent='⚠️ Nem találom a fejlécsort!'; return; }
+
+    var hdrs = rows[hi].map(function(h){ return String(h||'').trim(); });
+    var cKez = hdrs.findIndex(function(h){ return h.includes('Kezdet'); });
+    var cVeg = hdrs.findIndex(function(h){ return h.includes('Vége'); });
+    var cSzo = hdrs.findIndex(function(h){ return h.includes('Szoba'); });
+    var cKap = hdrs.findIndex(function(h){ return h.includes('Kapcsolattartó')||h.includes('Kapcsolat'); });
+    var cFo  = hdrs.findIndex(function(h){ return h.includes('Résztvevők')||h.includes('Resztvevok'); });
+
+    function pd(str) {
+      var m=String(str).match(/(\d{4})\. (\d{2})\. (\d{2})/);
+      return m ? m[1]+'-'+m[2]+'-'+m[3] : '';
+    }
+
+    var today = todayStr();
+    var wMap = {}; // id -> [{checkinDate, checkoutDate, vendeg}]
+    var previoMap = {}; // name -> {status, vendeg, fo, checkinDate, checkoutDate}
+
+    for (var i=hi+1;i<rows.length;i++) {
+      var row=rows[i];
+      if (!row||!row[cSzo]) continue;
+      var szoba=String(row[cSzo]||'').trim();
+      var cin=pd(row[cKez]);
+      var cout=pd(row[cVeg]);
+      var vendeg=String(row[cKap]||'').trim();
+      var fo=parseInt(row[cFo])||2;
+      var id=NAME_TO_ID[szoba];
+      if (!szoba||!cin||!cout) continue;
+
+      // Weekly map - all bookings
+      if (id) {
+        if (!wMap[id]) wMap[id]=[];
+        wMap[id].push({checkinDate:cin,checkoutDate:cout,vendeg:vendeg,fo:fo});
+      }
+
+      // Today's map - only active today
+      if (cin<=today && cout>today) {
+        var st='occupied';
+        if (cin===today) st='checkin';
+        if (cout===today) st='checkout';
+        previoMap[szoba]={status:st,vendeg:vendeg,fo:fo,checkinDate:cin,checkoutDate:cout};
+      }
+    }
+
+    STATE.weeklyMap = wMap;
+
+    // Save bookings to Supabase room_bookings table
+    try {
+      // Delete old bookings first, then insert new ones
+      await sb('/room_bookings?room_id=gte.1',{method:'DELETE'});
+      var toInsert = [];
+      for (var rid in wMap) {
+        wMap[rid].forEach(function(b){
+          toInsert.push({
+            room_id: parseInt(rid),
+            room_name: STATE.rooms.find(function(r){ return r.id===parseInt(rid); }) ? STATE.rooms.find(function(r){ return r.id===parseInt(rid); }).name : '',
+            guest: b.vendeg,
+            checkin_date: b.checkinDate,
+            checkout_date: b.checkoutDate,
+            guests: b.fo
+          });
+        });
+      }
+      if (toInsert.length>0) {
+        await sb('/room_bookings',{method:'POST',body:JSON.stringify(toInsert)});
+      }
+    } catch(e){ console.warn('room_bookings save error:',e); }
+
+    // Count reggeli/vacsora
+    // Reggeli = akik ma kimentek (checkout) + akik bent vannak de nem ma érkeztek (occupied)
+    // Vacsora = mindenki aki ma bent van (checkin + occupied + checkout ha vacsoráznak)
+    var reggeli=0, vacsora=0;
+    for (var name in previoMap) {
+      var d=previoMap[name];
+      // Reggeli: kiköltözők (utolsó reggelit esznek) + foglaltak (bent vannak)
+      if (d.status==='checkout'||d.status==='occupied') reggeli+=d.fo;
+      // Vacsora: mindenki aki ma bent van
+      if (d.status==='checkin'||d.status==='occupied') vacsora+=d.fo;
+    }
+    document.getElementById('sReg').value = reggeli;
+    document.getElementById('sVac').value = vacsora;
+
+    // Update rooms
+    var updated=0;
+    for (var i=0;i<STATE.rooms.length;i++) {
+      var r=STATE.rooms[i];
+      var data=previoMap[r.name];
+      if (data) {
+        r.guests=data.fo; r.status=data.status;
+        r.checkin_date=data.checkinDate; r.checkout_date=data.checkoutDate;
+        r.note=data.vendeg ? data.vendeg+' | ki: '+data.checkoutDate : r.note;
+        try { await sb('/rooms?id=eq.'+r.id,{method:'PATCH',body:JSON.stringify({guests:r.guests,status:r.status,note:r.note,checkin_date:r.checkin_date,checkout_date:r.checkout_date})}); } catch(e){}
+        updated++;
+      } else {
+        r.status='clean'; r.checkin_date=''; r.checkout_date='';
+        try { await sb('/rooms?id=eq.'+r.id,{method:'PATCH',body:JSON.stringify({status:'clean',checkin_date:'',checkout_date:''})}); } catch(e){}
+      }
+    }
+
+    renderRooms('all');
+    renderWeekTable();
+    updateStats();
+    status.textContent='✅ '+updated+' szoba frissítve | Reggeli: '+reggeli+' fő | Vacsora: '+vacsora+' fő';
+    toast('✅ Previo import kész!');
   } catch(e) {
-    toast('⚠️ Mentés sikertelen – ellenőrizd a kapcsolatot!');
+    console.error(e);
+    status.textContent='⚠️ Hiba: '+e.message;
+    toast('⚠️ Import hiba!');
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// MODAL EVENTS – frissített renderModalEvents (eventCardHTML alapú)
-// ════════════════════════════════════════════════════════════════════════════
-function renderModalEvents() {
-  const list = document.getElementById('modalEventList');
-  if (!list) return;
-  const today = todayStr();
-  const in7 = new Date(); in7.setDate(in7.getDate()+7);
-  const limit = in7.toISOString().slice(0,10);
-  const sorted = [...STATE.events]
-    .filter(ev => ev.date >= today && ev.date <= limit)
-    .sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
-  if (!sorted.length) {
-    list.innerHTML = '<p style="color:var(--stone);font-size:12px;text-align:center;padding:8px 0">Nincs esemény a következő 7 napban</p>';
-    return;
-  }
-  list.innerHTML = sorted.map(ev => eventCardHTML(ev, true)).join('');
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// AUTO-TISZTÍTÁS (60 napos esemény törlés)
-// ════════════════════════════════════════════════════════════════════════════
-async function cleanOldEvents() {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 60);
-  const cutoffStr = cutoff.toISOString().slice(0,10);
+// ══════════════════════════════════════════════════════════════
+// SHIFT
+// ══════════════════════════════════════════════════════════════
+async function saveShift() {
+  var msg = document.getElementById('shiftNote').value;
+  var btn = document.getElementById('shiftBtn');
   try {
-    await sbFetch(`/events?date=lt.${cutoffStr}`, { method: 'DELETE' });
-    STATE.events = STATE.events.filter(e => e.date >= cutoffStr);
-  } catch(e) { /* silent */ }
+    await sb('/shift',{method:'POST',
+      headers:Object.assign({},HDR,{'Prefer':'resolution=merge-duplicates'}),
+      body:JSON.stringify({id:1,message:msg,updated_at:new Date().toISOString()})});
+    btn.textContent='✅ Elmentve!';
+    setTimeout(function(){ btn.textContent='Mentés & átadás'; },2000);
+    toast('✅ Műszakátadó mentve!');
+  } catch(e) {
+    toast('⚠️ Mentési hiba – próbálja újra!');
+  }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// SUPABASE LOAD FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+async function loadRoomBookings() {
+  try {
+    var data = await sb('/room_bookings?order=checkin_date');
+    if (!data||!data.length) return;
+    var wMap = {};
+    data.forEach(function(b){
+      if (!wMap[b.room_id]) wMap[b.room_id]=[];
+      wMap[b.room_id].push({checkinDate:b.checkin_date,checkoutDate:b.checkout_date,vendeg:b.guest,fo:b.guests});
+    });
+    STATE.weeklyMap = wMap;
+  } catch(e){ console.warn('loadRoomBookings:',e); }
+}
+
+async function loadRooms() {
+  var data = await sb('/rooms?order=id');
+  if (data && data.length>0) {
+    STATE.rooms = data;
+  } else {
+    var ins = await sb('/rooms',{method:'POST',body:JSON.stringify(DEFAULT_ROOMS)});
+    STATE.rooms = ins||DEFAULT_ROOMS;
+  }
+}
+
+async function loadEvents() {
+  var data = await sb('/events?order=date,time');
+  STATE.events = data||[];
+  // Auto-delete events older than 60 days
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate()-60);
+  var cutStr = cutoff.toISOString().slice(0,10);
+  try { await sb('/events?date=lt.'+cutStr,{method:'DELETE'}); } catch(e){}
+  STATE.events = STATE.events.filter(function(e){ return e.date>=cutStr; });
+}
+
+async function loadWellness() {
+  var data = await sb('/wellness?date=eq.'+todayStr());
+  STATE.wellness = data||[];
+}
+
+async function loadShift() {
+  var data = await sb('/shift?order=updated_at.desc&limit=1');
+  if (data&&data.length>0) document.getElementById('shiftNote').value = data[0].message||'';
+}
+
+// ══════════════════════════════════════════════════════════════
 // INIT
-// ════════════════════════════════════════════════════════════════════════════
-async function init() {
-  setLoading(true);
+// ══════════════════════════════════════════════════════════════
+document.getElementById('evDate').value = todayStr();
+document.getElementById('qDate').value  = todayStr();
+
+(async function(){
   try {
     await Promise.all([
-      loadRooms().catch(e => console.warn('rooms:', e)),
-      loadEvents().catch(e => console.warn('events:', e)),
-      loadWellness().catch(e => console.warn('wellness:', e)),
-      loadShift().catch(e => console.warn('shift:', e)),
+      loadRooms().catch(function(e){ console.warn('rooms:',e); }),
+      loadEvents().catch(function(e){ console.warn('events:',e); }),
+      loadWellness().catch(function(e){ console.warn('wellness:',e); }),
+      loadShift().catch(function(e){ console.warn('shift:',e); }),
+      loadRoomBookings().catch(function(e){ console.warn('bookings:',e); })
     ]);
-    cleanOldEvents().catch(() => {});
-  } catch (e) {
-    console.error('Init error:', e);
-  }
-  // Always continue regardless of Supabase errors
-  updateDashboardStats();
+  } catch(e) { console.error(e); }
+  updateStats();
   renderEvents();
-  document.getElementById('evDate').value  = todayStr();
-  document.getElementById('qEvDate').value = todayStr();
-  setLoading(false);
-  try { initRealtime(); } catch(e) {}
-}
-
-init();
+  renderCalendar();
+})();
 </script>
 </body>
 </html>
