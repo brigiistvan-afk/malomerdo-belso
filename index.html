@@ -38,7 +38,7 @@ body{font-family:var(--fs);background:var(--cream);color:var(--ink);height:100dv
 .nb.active svg{transform:translateY(-2px)}
 .nb.active::after{content:'';position:absolute;top:0;left:15%;right:15%;height:3px;background:var(--moss);border-radius:0 0 3px 3px}
 /* MAIN */
-.main{flex:1;overflow-y:auto;padding:14px;max-width:540px;width:100%;margin:0 auto;padding-bottom:20px}
+.main{flex:1;overflow-y:auto;padding:14px 14px 80px;max-width:540px;width:100%;margin:0 auto;-webkit-overflow-scrolling:touch}
 .tab{display:none;animation:fi .22s ease}
 .tab.active{display:block}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -270,7 +270,7 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   <div id="calDetail"></div>
 
   <p class="sec" style="margin-top:20px">🛏️ Szobák – heti foglaltság</p>
-  <div class="card" style="padding:0;overflow-x:auto">
+  <div class="card" style="padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch">
     <table class="wt" id="weekTable"></table>
   </div>
 </section>
@@ -419,9 +419,29 @@ var NAME_TO_ID = {
 // ══════════════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════════════
-function todayStr() { return new Date().toISOString().slice(0,10); }
-function tomorrowStr() { var d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
-function inDays(n) { var d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function todayStr() {
+  var d = new Date();
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+function tomorrowStr() {
+  var d = new Date();
+  d.setDate(d.getDate()+1);
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+function inDays(n) {
+  var d = new Date();
+  d.setDate(d.getDate()+n);
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
 
 function toast(msg) {
   var el = document.getElementById('toast');
