@@ -907,7 +907,7 @@ async function importPrevio(input) {
     // Save bookings to Supabase room_bookings table
     try {
       // Delete old bookings first, then insert new ones
-      await sb('/room_bookings?room_id=gte.1',{method:'DELETE'});
+      try { await sb('/room_bookings?id=gte.0',{method:'DELETE'}); } catch(ex){}
       var toInsert = [];
       for (var rid in wMap) {
         wMap[rid].forEach(function(b){
