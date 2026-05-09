@@ -288,7 +288,7 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
       <div class="fg"><label class="fl">Helyszín</label>
         <select class="fsel" id="evPlace">
           <option>Rendezvényház (80 fő)</option><option>Borospince (20 fő)</option>
-          <option>Étterem (30 fő)</option><option>Külső helyszín / Terasz</option>
+          <option>Étterem (30 fő)</option><option>Külső helyszín</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Létszám (fő)</label><input class="fi" type="number" id="evCount" placeholder="fő" min="1"></div>
@@ -310,6 +310,17 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
         <div class="fg"><label class="fl">Mikorra?</label><input class="fi" type="time" id="evTATime"></div>
         <div class="fg"><label class="fl">Ki viszi el?</label><input class="fi" type="text" id="evTAWho" placeholder="Név"></div>
       </div>
+    </div>
+    <label class="fl">📷 Fotó csatolása</label>
+    <label id="photoUploadLbl" style="display:block;border:2px dashed rgba(45,110,48,.3);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:rgba(45,110,48,.04);margin-bottom:12px">
+      <div style="font-size:24px;margin-bottom:4px">📷</div>
+      <div style="font-size:13px;font-weight:600;color:var(--moss)">Fotó kiválasztása</div>
+      <div style="font-size:10px;color:var(--stone);margin-top:2px">Kézzel írt vázlat, tálalási minta</div>
+      <input type="file" id="evPhoto" accept="image/*" style="display:none" onchange="photoPreview(this)">
+    </label>
+    <div id="evPhotoPreview" style="display:none;margin-top:-6px;margin-bottom:12px;position:relative">
+      <img id="evPhotoImg" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover">
+      <button onclick="removePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px">✕</button>
     </div>
     <button class="btn" onclick="saveEvent()">Esemény mentése</button>
   </div>
@@ -359,7 +370,7 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
     <div class="fr2">
       <div class="fg"><label class="fl">Helyszín</label>
         <select class="fsel" id="qPlace">
-          <option>Rendezvényház</option><option>Borospince</option><option>Étterem</option><option>Terasz</option>
+          <option>Rendezvényház</option><option>Borospince</option><option>Étterem</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Létszám</label><input class="fi" type="number" id="qCount" placeholder="fő" min="1"></div>
@@ -562,6 +573,7 @@ function renderModalEvents() {
       +(ev.catering && ev.catering!=='Nincs catering' ? '<div style="background:rgba(0,0,0,.04);border-radius:8px;padding:8px;grid-column:1/-1"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div><div style="font-size:12px">'+ev.catering+'</div></div>' : '')
       +(ev.note ? '<div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div><div style="font-size:12px;font-style:italic">'+ev.note+'</div></div>' : '')
       +(ev.takeaway ? '<div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div><div style="font-size:12px">'+(ev.takeaway_time||'')+' '+(ev.takeaway_who?'– '+ev.takeaway_who:'')+'</div></div>' : '')
+      +(ev.photo_url ? '<div style="grid-column:1/-1;margin-top:4px"><a href="'+ev.photo_url+'" target="_blank"><img src="'+ev.photo_url+'" style="width:100%;border-radius:8px;max-height:180px;object-fit:cover"></a></div>' : '')
       +'</div></div>';
   }).join('');
 }
@@ -583,9 +595,39 @@ async function saveQuick() {
   toast('✅ Esemény mentve!');
 }
 
+function photoPreview(input) {
+  if (!input.files||!input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('evPhotoImg').src = e.target.result;
+    document.getElementById('evPhotoPreview').style.display = 'block';
+    document.getElementById('photoUploadLbl').style.borderColor = 'var(--moss)';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removePhoto() {
+  document.getElementById('evPhoto').value = '';
+  document.getElementById('evPhotoPreview').style.display = 'none';
+  document.getElementById('photoUploadLbl').style.borderColor = 'rgba(45,110,48,.3)';
+}
+
+async function uploadPhoto(file, eventId) {
+  var ext = file.name.split('.').pop() || 'jpg';
+  var path = 'event-' + eventId + '-' + Date.now() + '.' + ext;
+  var res = await fetch(SURL + '/storage/v1/object/event-photos/' + path, {
+    method: 'POST',
+    headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + SKEY, 'Content-Type': file.type },
+    body: file
+  });
+  if (!res.ok) throw new Error('Fotó feltöltési hiba');
+  return SURL + '/storage/v1/object/public/event-photos/' + path;
+}
+
 async function saveEvent() {
   var type = document.getElementById('evType').value.trim();
   if (!type) { toast('⚠️ Add meg a rendezvény nevét!'); return; }
+  var photoFile = document.getElementById('evPhoto').files[0];
   var ev = {
     type:type, date:document.getElementById('evDate').value||todayStr(),
     time:document.getElementById('evTime').value||'00:00',
@@ -595,15 +637,26 @@ async function saveEvent() {
     catering:document.getElementById('evCatering').value,
     takeaway:document.getElementById('takeaway').checked,
     takeaway_time:document.getElementById('evTATime').value,
-    takeaway_who:document.getElementById('evTAWho').value
+    takeaway_who:document.getElementById('evTAWho').value,
+    photo_url:''
   };
   try {
     var res = await sb('/events',{method:'POST',body:JSON.stringify(ev)});
-    STATE.events.push(Array.isArray(res)?res[0]:res);
+    var saved = Array.isArray(res)?res[0]:res;
+    // Upload photo if selected
+    if (photoFile && saved.id) {
+      try {
+        var url = await uploadPhoto(photoFile, saved.id);
+        saved.photo_url = url;
+        await sb('/events?id=eq.'+saved.id,{method:'PATCH',body:JSON.stringify({photo_url:url})});
+      } catch(pe) { console.warn('Photo upload failed:',pe); }
+    }
+    STATE.events.push(saved);
   } catch(e) { toast('⚠️ Mentési hiba!'); return; }
   ['evType','evDate','evTime','evCount','evNote','evTATime','evTAWho'].forEach(function(id){ document.getElementById(id).value=''; });
   document.getElementById('takeaway').checked=false;
   document.getElementById('taFields').style.display='none';
+  removePhoto();
   toast('✅ Esemény mentve!');
   showTab('dashboard');
 }
@@ -805,6 +858,7 @@ function calSelect(ds) {
       +'<div style="background:var(--cream);border-radius:8px;padding:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Catering</div><div style="font-size:11px">'+( ev.catering||'–')+'</div></div>'
       +(ev.note ? '<div style="background:rgba(201,150,30,.08);border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid rgba(201,150,30,.2)"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px">Megjegyzés</div><div style="font-size:12px;font-style:italic">'+ev.note+'</div></div>' : '')
       +(ev.takeaway ? '<div style="background:#fff8e1;border-radius:8px;padding:8px;grid-column:1/-1;border:1px solid #ffe082"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#f57f17;margin-bottom:2px">🥡 Elvitelre</div><div style="font-size:12px">'+(ev.takeaway_time||'')+' '+(ev.takeaway_who?'– '+ev.takeaway_who:'')+'</div></div>' : '')
+      +(ev.photo_url ? '<div style="grid-column:1/-1;margin-top:4px"><a href="'+ev.photo_url+'" target="_blank"><img src="'+ev.photo_url+'" style="width:100%;border-radius:8px;max-height:220px;object-fit:cover"></a></div>' : '')
       +'</div></div>';
   });
   det.innerHTML = html;
