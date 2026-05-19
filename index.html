@@ -133,19 +133,19 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
 .cal-nav{background:none;border:none;cursor:pointer;font-size:22px;color:var(--forest);padding:2px 8px;border-radius:6px;transition:.2s}
 .cal-nav:hover{background:var(--parch)}
 .cal-title{font-family:var(--ff);font-size:18px;color:var(--forest)}
-.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--parch)}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--parch);width:100%}
 .cal-dow div{text-align:center;padding:7px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)}
 .cal-dow div:nth-child(6),.cal-dow div:nth-child(7){color:var(--red)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:rgba(0,0,0,.06)}
-.cd{background:var(--white);min-height:46px;padding:4px;cursor:pointer;border:2px solid transparent;transition:.15s}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:rgba(0,0,0,.06);table-layout:fixed;width:100%}
+.cd{background:var(--white);min-height:40px;padding:3px 2px;cursor:pointer;border:2px solid transparent;transition:.15s;overflow:hidden;min-width:0;width:100%}
 .cd:hover{background:var(--parch)}
 .cd.today{border-color:var(--gold)}
 .cd.sel{background:var(--fmid)}
 .cd.weekend .cdn{color:var(--red)}
 .cd.sel .cdn{color:var(--cream)}
-.cdn{font-size:12px;text-align:center;line-height:1.7;font-weight:400}
+.cdn{font-size:11px;text-align:center;line-height:1.5;font-weight:400}
 .cd.today .cdn{font-weight:700}
-.cev{background:var(--moss);border-radius:3px;padding:1px 3px;font-size:8px;color:#fff;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cev{background:var(--moss);border-radius:2px;padding:1px 2px;font-size:6px;color:#fff;margin-top:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block;max-width:100%}
 .cd.sel .cev{background:rgba(255,255,255,.3)}
 /* PREVIO */
 .previo-box{background:linear-gradient(135deg,var(--forest),var(--fmid));border-radius:14px;padding:16px;margin-bottom:14px;color:var(--cream)}
