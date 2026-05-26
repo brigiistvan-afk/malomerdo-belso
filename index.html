@@ -187,7 +187,7 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
 
   <p class="sec">Közelgő programok – 7 nap</p>
   <div id="evList"></div>
-  <button class="btn" onclick="openModal()">+ Új esemény rögzítése</button>
+  <button class="btn" onclick="showTab('events')">+ Új esemény rögzítése</button>
 
   <p class="sec" style="margin-top:18px">Műszakátadó</p>
   <div class="shift-box">
@@ -521,7 +521,7 @@ function renderEvents() {
       +(ev.catering && ev.catering!=='Nincs catering' ? '<div class="emeta" style="margin-top:3px">🍽 '+ev.catering+'</div>' : '')
       +(ev.note ? '<div class="emeta" style="margin-top:3px;font-style:italic">'+ev.note+'</div>' : '')
       +'</div>'
-      +'<div style="display:flex;flex-direction:column;gap:4px"><button onclick="openEditModal('+ev.id+')" style="background:var(--parch);border:none;border-radius:6px;padding:4px 6px;font-size:9px;cursor:pointer;color:var(--forest);font-weight:600">✏️</button><button class="edel" onclick="delEvent('+ev.id+')">🗑</button></div>'
+      +'<div style="display:flex;flex-direction:row;gap:6px;align-items:center"><button onclick="openEditModal('+ev.id+')" style="background:var(--parch);border:none;border-radius:8px;padding:5px 8px;font-size:14px;cursor:pointer">✏️</button><button class="edel" onclick="delEvent('+ev.id+')">🗑</button></div>'
       +'</div>';
   }).join('');
 }
@@ -542,6 +542,12 @@ function openModal() {
   document.getElementById('qDate').value = todayStr();
   renderModalEvents();
   document.getElementById('evModal').classList.add('open');
+  // Scroll to new event form after short delay
+  setTimeout(function() {
+    var newForm = document.getElementById('qType');
+    if (newForm) newForm.scrollIntoView({behavior:'smooth', block:'start'});
+    newForm.focus();
+  }, 300);
 }
 function closeModal(e) {
   if (e.target===document.getElementById('evModal'))
