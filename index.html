@@ -521,7 +521,7 @@ function renderEvents() {
       +(ev.catering && ev.catering!=='Nincs catering' ? '<div class="emeta" style="margin-top:3px">🍽 '+ev.catering+'</div>' : '')
       +(ev.note ? '<div class="emeta" style="margin-top:3px;font-style:italic">'+ev.note+'</div>' : '')
       +'</div>'
-      +'<button class="edel" onclick="delEvent('+ev.id+')">🗑</button>'
+      +'<div style="display:flex;flex-direction:column;gap:4px"><button onclick="openEditModal('+ev.id+')" style="background:var(--parch);border:none;border-radius:6px;padding:4px 6px;font-size:9px;cursor:pointer;color:var(--forest);font-weight:600">✏️</button><button class="edel" onclick="delEvent('+ev.id+')">🗑</button></div>'
       +'</div>';
   }).join('');
 }
@@ -851,7 +851,7 @@ function calSelect(ds) {
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
       +'<div><div style="font-family:var(--ff);font-size:18px;color:var(--forest)">'+ev.type+'</div>'
       +'<div style="font-size:11px;color:var(--stone);margin-top:2px">'+ev.time+' · '+ev.place+'</div></div>'
-      +'<button onclick="delEvent('+ev.id+')" style="background:#fce4ec;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:var(--red)">🗑</button>'
+      +'<div style="display:flex;gap:6px"><button onclick="openEditModal('+ev.id+')" style="background:var(--parch);border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:var(--forest);font-weight:600">✏️ Szerk.</button><button onclick="delEvent('+ev.id+')" style="background:#fce4ec;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;color:var(--red)">🗑</button></div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
       +'<div style="background:var(--cream);border-radius:8px;padding:8px"><div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:2px">Létszám</div><div style="font-size:14px;font-weight:600;color:var(--forest)">'+ev.count+' fő</div></div>'
@@ -1016,6 +1016,13 @@ async function importPrevio(input) {
     }
     document.getElementById('sReg').value = reggeli;
     document.getElementById('sVac').value = vacsora;
+    // Save counts to Supabase so they persist
+    try {
+      await sb('/shift', {method:'POST',
+        headers: Object.assign({}, HDR, {'Prefer':'resolution=merge-duplicates'}),
+        body: JSON.stringify({id:1, reggeli:reggeli, vacsora:vacsora, updated_at:new Date().toISOString()})
+      });
+    } catch(e) { console.warn('counts save:', e); }
 
     // Update rooms
     var updated=0;
@@ -1066,6 +1073,88 @@ async function saveShift() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// EDIT EVENT
+// ══════════════════════════════════════════════════════════════
+function openEditModal(id) {
+  var ev = STATE.events.find(function(e){ return e.id===id; });
+  if (!ev) return;
+  document.getElementById('editEvId').value = id;
+  document.getElementById('editType').value = ev.type||'';
+  document.getElementById('editDate').value = ev.date||'';
+  document.getElementById('editTime').value = ev.time||'';
+  document.getElementById('editCount').value = ev.count||0;
+  document.getElementById('editNote').value = ev.note||'';
+  document.getElementById('editCatering').value = ev.catering||'Nincs catering';
+  document.getElementById('editTakeaway').checked = ev.takeaway||false;
+  document.getElementById('editTATime').value = ev.takeaway_time||'';
+  document.getElementById('editTAWho').value = ev.takeaway_who||'';
+  document.getElementById('editTAFields').style.display = ev.takeaway ? 'grid' : 'none';
+  // Set place
+  var pl = document.getElementById('editPlace');
+  for (var i=0; i<pl.options.length; i++) {
+    if (pl.options[i].value === ev.place) { pl.selectedIndex=i; break; }
+  }
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEditModal(e) {
+  if (e.target===document.getElementById('editModal'))
+    document.getElementById('editModal').classList.remove('open');
+}
+
+function toggleEditTA() {
+  document.getElementById('editTAFields').style.display =
+    document.getElementById('editTakeaway').checked ? 'grid' : 'none';
+}
+
+async function saveEditEvent() {
+  var id = parseInt(document.getElementById('editEvId').value);
+  var changes = {
+    type:         document.getElementById('editType').value.trim(),
+    date:         document.getElementById('editDate').value,
+    time:         document.getElementById('editTime').value,
+    place:        document.getElementById('editPlace').value,
+    count:        parseInt(document.getElementById('editCount').value)||0,
+    note:         document.getElementById('editNote').value.trim(),
+    catering:     document.getElementById('editCatering').value,
+    takeaway:     document.getElementById('editTakeaway').checked,
+    takeaway_time:document.getElementById('editTATime').value,
+    takeaway_who: document.getElementById('editTAWho').value
+  };
+  if (!changes.type) { toast('⚠️ Add meg a rendezvény nevét!'); return; }
+  try {
+    await sb('/events?id=eq.'+id, {method:'PATCH', body:JSON.stringify(changes)});
+    var idx = STATE.events.findIndex(function(e){ return e.id===id; });
+    if (idx>=0) Object.assign(STATE.events[idx], changes);
+    document.getElementById('editModal').classList.remove('open');
+    renderEvents();
+    renderCalendar();
+    renderModalEvents();
+    toast('✅ Esemény módosítva!');
+  } catch(e) {
+    toast('⚠️ Mentési hiba!');
+  }
+}
+
+async function confirmDeleteEvent() {
+  var id = parseInt(document.getElementById('editEvId').value);
+  var ev = STATE.events.find(function(e){ return e.id===id; });
+  if (!ev) return;
+  if (!confirm('Biztosan törli: "'+ev.type+'"?')) return;
+  try {
+    await sb('/events?id=eq.'+id, {method:'DELETE'});
+    STATE.events = STATE.events.filter(function(e){ return e.id!==id; });
+    document.getElementById('editModal').classList.remove('open');
+    renderEvents();
+    renderCalendar();
+    renderModalEvents();
+    toast('Esemény törölve');
+  } catch(e) {
+    toast('⚠️ Törlési hiba!');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
 // SUPABASE LOAD FUNCTIONS
 // ══════════════════════════════════════════════════════════════
 async function loadRoomBookings() {
@@ -1109,7 +1198,11 @@ async function loadWellness() {
 
 async function loadShift() {
   var data = await sb('/shift?order=updated_at.desc&limit=1');
-  if (data&&data.length>0) document.getElementById('shiftNote').value = data[0].message||'';
+  if (data&&data.length>0) {
+    document.getElementById('shiftNote').value = data[0].message||'';
+    if (data[0].reggeli) document.getElementById('sReg').value = data[0].reggeli;
+    if (data[0].vacsora) document.getElementById('sVac').value = data[0].vacsora;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1133,5 +1226,54 @@ document.getElementById('qDate').value  = todayStr();
   renderCalendar();
 })();
 </script>
+
+<!-- EDIT EVENT MODAL -->
+<div class="mo" id="editModal" onclick="closeEditModal(event)">
+  <div class="mdl">
+    <div class="mh"></div>
+    <div class="mt">Esemény szerkesztése</div>
+    <input type="hidden" id="editEvId">
+    <div class="fg"><label class="fl">Rendezvény neve</label><input class="fi" type="text" id="editType" placeholder="pl. Esküvő, Konferencia"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Dátum</label><input class="fi" type="date" id="editDate"></div>
+      <div class="fg"><label class="fl">Időpont</label><input class="fi" type="time" id="editTime"></div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Helyszín</label>
+        <select class="fsel" id="editPlace">
+          <option>Rendezvényház (80 fő)</option>
+          <option>Borospince (20 fő)</option>
+          <option>Étterem (30 fő)</option>
+          <option>Külső helyszín</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Létszám (fő)</label><input class="fi" type="number" id="editCount" min="0"></div>
+    </div>
+    <div class="fg"><label class="fl">Catering</label>
+      <select class="fsel" id="editCatering">
+        <option>Nincs catering</option>
+        <option>Bekészítés (kávé, aprósütemény)</option>
+        <option>Tálak (sültes tál, hidegtál)</option>
+        <option>Teljes menüsor</option>
+        <option>Egyedi megbeszélés alapján</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Megjegyzés</label>
+      <textarea class="fta" id="editNote" placeholder="Speciális kérések..."></textarea>
+    </div>
+    <div style="background:rgba(201,150,30,.08);border:1.5px solid rgba(201,150,30,.25);border-radius:12px;padding:12px;margin-bottom:12px">
+      <div class="cbrow"><input type="checkbox" id="editTakeaway" onchange="toggleEditTA()"><label for="editTakeaway">🥡 Elvitelre kért tálak</label></div>
+      <div id="editTAFields" style="display:none" class="fr2">
+        <div class="fg"><label class="fl">Mikorra?</label><input class="fi" type="time" id="editTATime"></div>
+        <div class="fg"><label class="fl">Ki viszi el?</label><input class="fi" type="text" id="editTAWho" placeholder="Név"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" style="background:#c0392b" onclick="confirmDeleteEvent()">🗑 Törlés</button>
+      <button class="btn" onclick="saveEditEvent()">💾 Mentés</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
