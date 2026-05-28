@@ -681,28 +681,33 @@ function renderRooms(filter) {
 
   function rHTML(r) {
     if (filter!=='all' && r.status!==filter) return '';
-    var isOut = r.status==='checkout';
     var cl = r.cleaning||'normal';
-    return '<div class="rcard" id="rc-'+r.id+'">'
-      +'<div class="rhdr"><div>'
-      +'<div class="rname">'+r.name+'</div>'
-      +'<div class="rguests"><input type="number" value="'+r.guests+'" min="1" max="8" '
-      +'style="width:26px;border:none;background:none;font-size:10px;color:var(--stone);outline:none;font-family:var(--fs)" '
-      +'onchange="updRoom('+r.id+',\'guests\',this.value)"> fő</div>'
-      +'</div>'
-      +'<select class="rsel" data-s="'+r.status+'" onchange="updRoomStatus('+r.id+',this)">'
-      +'<option value="clean"'+(r.status==='clean'?' selected':'')+'>🟢 Tiszta</option>'
-      +'<option value="checkin"'+(r.status==='checkin'?' selected':'')+'>🟡 Beköltözik</option>'
-      +'<option value="checkout"'+(r.status==='checkout'?' selected':'')+'>🔴 Kiköltözik</option>'
-      +'<option value="occupied"'+(r.status==='occupied'?' selected':'')+'>🔵 Foglalt</option>'
-      +'</select></div>'
-      +(isOut ? '<div class="clean-btns">'
-        +'<button class="cbtn normal'+(cl==='normal'?' active':'')+'" onclick="setClean('+r.id+',\'normal\',this)">🧹 Sima takarítás</button>'
-        +'<button class="cbtn deep'+(cl==='deep'?' active':'')+'" onclick="setClean('+r.id+',\'deep\',this)">🧽 Végtakarítás</button>'
-        +'</div>' : '')
-      +'<textarea class="rnote" placeholder="Szobaasszony megjegyzése..." onblur="updRoom('+r.id+',\'note\',this.value)">'+( r.note||'')+'</textarea>'
-      +'</div>';
+    var note = r.note||'';
+    var h = '<div class="rcard" id="rc-'+r.id+'">';
+    h += '<div class="rhdr"><div>';
+    h += '<div class="rname">'+r.name+'</div>';
+    h += '<div class="rguests"><input type="number" value="'+r.guests+'" min="1" max="8" style="width:26px;border:none;background:none;font-size:10px;color:var(--stone);outline:none;font-family:var(--fs)" onchange="updRoom('+r.id+String.fromCharCode(44)+"'guests'"+String.fromCharCode(44)+'this.value)"> fő</div>';
+    h += '</div>';
+    h += '<select class="rsel" data-s="'+r.status+'" onchange="updRoomStatus('+r.id+',this)">';
+    h += '<option value="clean"'+(r.status==='clean'?' selected':'')+'>🟢 Tiszta</option>';
+    h += '<option value="checkin"'+(r.status==='checkin'?' selected':'')+'>🟡 Beköltözik</option>';
+    h += '<option value="checkout"'+(r.status==='checkout'?' selected':'')+'>🔴 Kiköltözik</option>';
+    h += '<option value="occupied"'+(r.status==='occupied'?' selected':'')+'>🔵 Foglalt</option>';
+    h += '</select></div>';
+    h += '<div class="clean-btns">';
+    h += '<button class="cbtn normal'+(cl==='normal'?' active':'')+'" onclick="setClean('+r.id+",'normal',this"+')">🧹 Sima</button>';
+    h += '<button class="cbtn deep'+(cl==='deep'?' active':'')+'" onclick="setClean('+r.id+",'deep',this"+')">🧽 Végtakarítás</button>';
+    h += '</div>';
+    h += '<div style="position:relative">';
+    h += '<textarea class="rnote" id="rn-'+r.id+'" placeholder="Szobaasszony megjegyzése..." oninput="schedSave('+r.id+',this.value)" onblur="updRoom('+r.id+",'note'"+',this.value)">'+note+'</textarea>';
+    if (note) {
+      h += '<button onclick="clearNote('+r.id+')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.15);border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;color:var(--stone);">&#215;</button>';
+    }
+    h += '</div></div>';
+    return h;
   }
+
+  list.innerHTML =
 
   list.innerHTML =
     '<div class="blbl">🏰 Vadászkastély (1–9. szoba)</div>' + kastely.map(rHTML).join('') +
@@ -710,11 +715,30 @@ function renderRooms(filter) {
   updateStats();
 }
 
+var _saveTimers = {};
+function schedSave(id, val) {
+  clearTimeout(_saveTimers[id]);
+  _saveTimers[id] = setTimeout(function(){ updRoom(id,'note',val); }, 800);
+}
+
+async function clearNote(id) {
+  var r = STATE.rooms.find(function(r){ return r.id===id; });
+  if (!r) return;
+  r.note = '';
+  try { await sb('/rooms?id=eq.'+id,{method:'PATCH',body:JSON.stringify({note:''})}); } catch(e){}
+  renderRooms(document.querySelector('.fbtn.active') ? 
+    (document.querySelector('.fbtn.active').textContent.trim()==='Mind' ? 'all' : document.querySelector('.fbtn.active').dataset.f||'all') 
+    : 'all');
+  toast('Megjegyzés törölve');
+}
+
 async function updRoom(id, key, val) {
   var r = STATE.rooms.find(function(r){ return r.id===id; });
   if (!r) return;
   r[key] = key==='guests' ? parseInt(val) : val;
-  try { await sb('/rooms?id=eq.'+id,{method:'PATCH',body:JSON.stringify({[key]:r[key]})}); } catch(e){}
+  var patch = {[key]:r[key]};
+  if (key==='note' || key==='cleaning') patch.updated_at = new Date().toISOString();
+  try { await sb('/rooms?id=eq.'+id,{method:'PATCH',body:JSON.stringify(patch)}); } catch(e){}
 }
 
 async function updRoomStatus(id, sel) {
@@ -1064,12 +1088,17 @@ async function importPrevio(input) {
 // SHIFT
 // ══════════════════════════════════════════════════════════════
 async function saveShift() {
-  var msg = document.getElementById('shiftNote').value;
+  var newMsg = document.getElementById('shiftNote').value.trim();
+  if (!newMsg) { toast('⚠️ Írj valamit először!'); return; }
   var btn = document.getElementById('shiftBtn');
+  var d = new Date();
+  var ts = d.toLocaleString('hu-HU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  var fullMsg = '[' + ts + '] ' + newMsg;
   try {
     await sb('/shift',{method:'POST',
       headers:Object.assign({},HDR,{'Prefer':'resolution=merge-duplicates'}),
-      body:JSON.stringify({id:1,message:msg,updated_at:new Date().toISOString()})});
+      body:JSON.stringify({id:1,message:fullMsg,updated_at:new Date().toISOString(),reggeli:parseInt(document.getElementById('sReg').value)||0,vacsora:parseInt(document.getElementById('sVac').value)||0})});
+    document.getElementById('shiftNote').value = fullMsg;
     btn.textContent='✅ Elmentve!';
     setTimeout(function(){ btn.textContent='Mentés & átadás'; },2000);
     toast('✅ Műszakátadó mentve!');
@@ -1219,6 +1248,16 @@ document.getElementById('qDate').value  = todayStr();
 
 (async function(){
   try {
+    // Clear notes older than 30 days
+    try {
+      var cutoff = new Date();
+      cutoff.setDate(cutoff.getDate()-30);
+      await sb('/rooms?updated_at=lt.'+cutoff.toISOString()+'&note=neq.',{
+        method:'PATCH',
+        body:JSON.stringify({note:'',cleaning:'normal'})
+      });
+    } catch(e){ console.warn('clear old notes:',e); }
+
     await Promise.all([
       loadRooms().catch(function(e){ console.warn('rooms:',e); }),
       loadEvents().catch(function(e){ console.warn('events:',e); }),
