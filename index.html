@@ -336,12 +336,22 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   <div class="card">
     <div class="card-title">Új menükép feltöltése</div>
 
-    <div id="menuUploadArea" class="menu-upload-area" onclick="document.getElementById('menuFileInput').click()">
-      <div class="icon">📸</div>
-      <p><strong>Koppints ide</strong> a kép kiválasztásához</p>
-      <p style="margin-top:4px;font-size:11px">vagy fényképezd le a mai menütáblát</p>
+    <div id="menuUploadArea" class="menu-upload-area">
+      <div class="icon">🍽️</div>
+      <p><strong>Válassz forrást</strong></p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+        <button onclick="document.getElementById('menuCameraInput').click()" style="background:var(--forest);color:var(--cream);border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+          📸 Fényképezés
+        </button>
+        <button onclick="document.getElementById('menuFileInput').click()" style="background:var(--fmid);color:var(--cream);border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+          🖼️ Galéria / Fájl
+        </button>
+      </div>
     </div>
-    <input type="file" id="menuFileInput" accept="image/*" capture="environment" style="display:none" onchange="menuFileSelected(this)">
+    <!-- Kamera input -->
+    <input type="file" id="menuCameraInput" accept="image/*" capture="environment" style="display:none" onchange="menuFileSelected(this)">
+    <!-- Galéria/fájl input - capture nélkül -->
+    <input type="file" id="menuFileInput" accept="image/*,application/pdf" style="display:none" onchange="menuFileSelected(this)">
 
     <!-- Előnézet feltöltés előtt -->
     <div id="menuPreviewWrap" style="display:none;margin-top:12px">
@@ -518,6 +528,7 @@ function menuClearPreview() {
   document.getElementById('menuPreviewWrap').style.display = 'none';
   document.getElementById('menuUploadArea').style.display = 'block';
   document.getElementById('menuFileInput').value = '';
+  document.getElementById('menuCameraInput').value = '';
 }
 
 async function menuUpload() {
@@ -563,6 +574,7 @@ async function menuUpload() {
     document.getElementById('menuUploadArea').style.display = 'block';
     menuSelectedFile = null;
     document.getElementById('menuFileInput').value = '';
+    document.getElementById('menuCameraInput').value = '';
     btn.disabled = false;
     toast('✅ Menükép feltöltve! Megjelenik a weboldalon.');
 
