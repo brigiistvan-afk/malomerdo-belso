@@ -417,6 +417,17 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
       <button onclick="removePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);border:none;border-radius:50%;width:28px;height:28px;color:#fff;cursor:pointer;font-size:14px">✕</button>
     </div>
     <button class="btn" onclick="saveEvent()">Esemény mentése</button>
+
+    <!-- BEUGRÓK az új eseményhez -->
+    <div style="margin-top:16px;border-top:1px solid var(--parch);padding-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <label class="fl" style="margin:0">👥 Beugrók hozzárendelése</label>
+        <span style="font-size:10px;color:var(--stone)">Mentés után is módosítható</span>
+      </div>
+      <div id="evBeugroLista" style="display:flex;flex-direction:column;gap:6px">
+        <p style="font-size:12px;color:var(--stone)">Először mentsd el az eseményt, majd a 👥 gombbal adj hozzá beugrósokat.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -727,7 +738,11 @@ function renderEvents() {
       +(ev.catering && ev.catering!=='Nincs catering' ? '<div class="emeta" style="margin-top:3px">🍽 '+ev.catering+'</div>' : '')
       +(ev.note ? '<div class="emeta" style="margin-top:3px;font-style:italic">'+ev.note+'</div>' : '')
       +'</div>'
-      +'<div style="display:flex;flex-direction:row;gap:6px;align-items:center"><button onclick="openEditModal('+ev.id+')" style="background:var(--parch);border:none;border-radius:8px;padding:5px 8px;font-size:14px;cursor:pointer">✏️</button><button class="edel" onclick="delEvent('+ev.id+')">🗑</button></div>'
+      +'<div style="display:flex;flex-direction:row;gap:6px;align-items:center">'
+      +'<button onclick="openBeugroModal('+ev.id+',\''+ev.type.replace(/'/g,"\\'")+'\')" style="background:var(--parch);border:none;border-radius:8px;padding:5px 8px;font-size:14px;cursor:pointer" title="Beugrók">👥</button>'
+      +'<button onclick="openEditModal('+ev.id+')" style="background:var(--parch);border:none;border-radius:8px;padding:5px 8px;font-size:14px;cursor:pointer">✏️</button>'
+      +'<button class="edel" onclick="delEvent('+ev.id+')">🗑</button>'
+      +'</div>'
       +'</div>';
   }).join('');
 }
@@ -871,6 +886,14 @@ async function saveEvent() {
   removePhoto();
   toast('✅ Esemény mentve!');
   showTab('dashboard');
+
+  // Azonnal megnyitjuk a beugrós modalt az új eseményhez
+  var saved2 = STATE.events[STATE.events.length-1];
+  if (saved2 && saved2.id) {
+    setTimeout(function() {
+      openBeugroModal(saved2.id, saved2.type);
+    }, 400);
+  }
 }
 
 function toggleTA() {
@@ -1463,13 +1486,20 @@ async function renderBeugrók() {
     return;
   }
   list.innerHTML = BEUGRÓK.map(function(b) {
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--parch)">' +
-      '<div>' +
-        '<div style="font-weight:600;font-size:14px;color:var(--forest)">' + b.nev + '</div>' +
-        '<div style="font-size:12px;color:var(--stone)">' + b.tel + (b.megjegyzes ? ' · ' + b.megjegyzes : '') + '</div>' +
-      '</div>' +
-      '<button onclick="deleteBeugro(\'' + b.id + '\',\'' + b.nev + '\')" style="background:none;border:none;color:var(--stone);font-size:18px;cursor:pointer;padding:4px 8px">🗑️</button>' +
-    '</div>';
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--parch)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
+      + '<div style="flex:1">'
+      + '<div style="font-weight:600;font-size:14px;color:var(--forest)">' + b.nev + '</div>'
+      + '<div style="font-size:12px;color:var(--stone)">' + b.tel + (b.megjegyzes ? ' · ' + b.megjegyzes : '') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
+      + '<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;color:var(--moss);white-space:nowrap">'
+      + '<input type="checkbox" ' + (b.visszajelzett ? 'checked' : '') + ' onchange="toggleVissza(\'' + b.id + '\',this.checked)"> ✓ Visszajelzett'
+      + '</label>'
+      + '<button onclick="deleteBeugro(\'' + b.id + '\',\'' + b.nev.replace(/'/g,"\\'") + '\')" style="background:none;border:none;color:var(--stone);font-size:16px;cursor:pointer;padding:2px 4px">🗑️</button>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
   }).join('');
 }
 
@@ -1584,7 +1614,123 @@ async function saveBeosztás() {
   } catch(e) { toast('❌ Hiba: ' + e.message); }
 }
 
+// ══════════════════════════════════════════════════════════════
+// BEUGRÓS MODAL — eseményhez csatolás
+// ══════════════════════════════════════════════════════════════
+
+var _beugroModalEsemenyId = null;
+
+async function openBeugroModal(esemenyId, esemenyNev) {
+  _beugroModalEsemenyId = esemenyId;
+  document.getElementById('beugroModalCim').textContent = '👥 Beugrók — ' + esemenyNev;
+  document.getElementById('beugroModal').classList.add('open');
+
+  var body = document.getElementById('beugroModalBody');
+  body.innerHTML = '<p style="font-size:13px;color:var(--stone);text-align:center;padding:20px">Betöltés...</p>';
+
+  // Betöltjük a meglévő beosztásokat erre az eseményre
+  try {
+    if (BEUGRÓK.length === 0) await loadBeugrók();
+    var data = await sb('/esemeny_beugrók?esemeny_id=eq.' + esemenyId);
+    var meglevo = {};
+    (data || []).forEach(function(b) { meglevo[b.beugro_id] = b; });
+
+    if (BEUGRÓK.length === 0) {
+      body.innerHTML = '<p style="font-size:13px;color:var(--stone);text-align:center;padding:20px">Még nincs beugrós felvéve a listán.<br>Először add hozzá a Beugrók tabban!</p>';
+      return;
+    }
+
+    body.innerHTML = BEUGRÓK.map(function(b) {
+      var beo = meglevo[b.id] || {};
+      return '<div style="padding:12px 0;border-bottom:1px solid var(--parch)">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+        + '<div>'
+        + '<div style="font-weight:600;font-size:14px;color:var(--forest)">' + b.nev + '</div>'
+        + '<div style="font-size:12px;color:var(--stone)">' + b.tel + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">'
+        + '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">'
+        + '<input type="checkbox" id="ebeo_' + b.id + '" ' + (beo.visszaigazolta !== undefined ? 'checked' : '') + '> Beosztva'
+        + '</label>'
+        + '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--moss)">'
+        + '<input type="checkbox" id="evisz_' + b.id + '" ' + (beo.visszaigazolta ? 'checked' : '') + '> ✓ Visszaigazolta'
+        + '</label>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    body.innerHTML = '<p style="color:var(--red);font-size:13px;padding:16px">Hiba: ' + e.message + '</p>';
+  }
+}
+
+function closeBeugroModal(e) {
+  if (e.target === document.getElementById('beugroModal'))
+    document.getElementById('beugroModal').classList.remove('open');
+}
+
+async function saveBeugroModal() {
+  var esemenyId = _beugroModalEsemenyId;
+  if (!esemenyId) return;
+  try {
+    // Töröljük a meglévőket
+    await sb('/esemeny_beugrók?esemeny_id=eq.' + esemenyId, { method: 'DELETE' });
+    // Mentjük az újakat
+    var mentendok = BEUGRÓK
+      .filter(function(b) {
+        var cb = document.getElementById('ebeo_' + b.id);
+        return cb && cb.checked;
+      })
+      .map(function(b) {
+        var vb = document.getElementById('evisz_' + b.id);
+        return {
+          esemeny_id: esemenyId,
+          beugro_id: b.id,
+          visszaigazolta: vb ? vb.checked : false,
+        };
+      });
+    if (mentendok.length > 0) {
+      await sb('/esemeny_beugrók', { method: 'POST', body: JSON.stringify(mentendok) });
+    }
+    document.getElementById('beugroModal').classList.remove('open');
+    toast('✅ Beugrók mentve! (' + mentendok.length + ' fő beosztva)');
+  } catch(e) {
+    toast('❌ Hiba: ' + e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// BEUGRÓK NÉVJEGYZÉK — visszajelzés pipa
+// ══════════════════════════════════════════════════════════════
+
+async function toggleVissza(id, checked) {
+  try {
+    await sb('/beugrók?id=eq.' + id, {
+      method: 'PATCH',
+      body: JSON.stringify({ visszajelzett: checked })
+    });
+    toast(checked ? '✅ Visszajelzett!' : '↩️ Visszajelzés törölve');
+  } catch(e) {
+    toast('❌ Hiba: ' + e.message);
+  }
+}
+
 </script>
+
+<!-- BEUGRÓS MODAL -->
+<div class="mo" id="beugroModal" onclick="closeBeugroModal(event)">
+  <div class="mdl" style="max-height:85vh;overflow-y:auto">
+    <div class="mh"></div>
+    <div class="mt" id="beugroModalCim">Beugrók beosztása</div>
+    <div class="mb" id="beugroModalBody">
+      <p style="font-size:13px;color:var(--stone);text-align:center;padding:20px">Betöltés...</p>
+    </div>
+    <div style="padding:0 16px 16px;display:flex;gap:8px">
+      <button class="btn" onclick="saveBeugroModal()">💾 Mentés</button>
+      <button class="btn" style="background:var(--parch);color:var(--ink)" onclick="document.getElementById('beugroModal').classList.remove('open')">Bezár</button>
+    </div>
+  </div>
+</div>
 
 <!-- EDIT EVENT MODAL -->
 <div class="mo" id="editModal" onclick="closeEditModal(event)">
