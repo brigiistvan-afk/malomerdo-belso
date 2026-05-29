@@ -132,6 +132,18 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.07)}
 .cal-nav{background:none;border:none;cursor:pointer;font-size:22px;color:var(--forest);padding:2px 8px;border-radius:6px;transition:.2s}
 .cal-nav:hover{background:var(--parch)}
+/* NAPI MENÜ */
+.menu-upload-area{border:2px dashed var(--moss);border-radius:14px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream)}
+.menu-upload-area:hover,.menu-upload-area.drag{border-color:var(--gold);background:var(--parch)}
+.menu-upload-area .icon{font-size:40px;margin-bottom:8px}
+.menu-upload-area p{font-size:13px;color:var(--stone)}
+.menu-upload-area strong{color:var(--forest)}
+.menu-preview{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px var(--sh)}
+.menu-preview img{width:100%;display:block;max-height:60vh;object-fit:contain;background:#000}
+.menu-preview .del-btn{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:32px;height:32px;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.menu-current{border-radius:12px;overflow:hidden;box-shadow:0 2px 10px var(--sh)}
+.menu-current img{width:100%;display:block;max-height:50vh;object-fit:contain;background:var(--cream)}
+.menu-date-badge{display:inline-block;background:var(--forest);color:var(--goldl);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 10px;border-radius:20px;margin-bottom:8px}
 .cal-title{font-family:var(--ff);font-size:18px;color:var(--forest)}
 .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--parch);width:100%}
 .cal-dow div{text-align:center;padding:7px 2px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone)}
@@ -224,33 +236,64 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   <div id="roomList"></div>
 </section>
 
-<!-- ── WELLNESS ───────────────────────────────────────────────────────── -->
-<section id="tab-wellness" class="tab">
-  <p class="sec">Jakuzzi – időpontok (09:00–21:00)</p>
-  <div class="card"><div class="wg" id="jacSlots"></div></div>
-  <p class="sec">Szauna – időpontok (09:00–21:00)</p>
-  <div class="card"><div class="wg" id="sauSlots"></div></div>
-  <p class="sec">Foglalás rögzítése</p>
+<!-- ── BEUGRÓK ─────────────────────────────────────────────────────────── -->
+<section id="tab-beugrók" class="tab">
+
+  <!-- Névjegyzék -->
+  <p class="sec">👥 Beugrós névjegyzék</p>
   <div class="card">
-    <div class="fg"><label class="fl">Vendég neve / szobaszám</label><input class="fi" type="text" id="wGuest" placeholder="pl. Kovács / 3. szoba"></div>
-    <div class="fr2">
-      <div class="fg"><label class="fl">Időpont</label>
-        <select class="fsel" id="wTime">
-          <option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option>
-          <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
-          <option>17:00</option><option>18:00</option><option>19:00</option><option>20:00</option>
-        </select>
-      </div>
-      <div class="fg"><label class="fl">Létesítmény</label>
-        <select class="fsel" id="wType">
-          <option value="jacuzzi">Jakuzzi</option>
-          <option value="sauna">Szauna</option>
-          <option value="both">Mindkettő</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn" onclick="bookWellness()">Foglalás rögzítése</button>
+    <div id="beugroList"></div>
+    <button class="btn" style="margin-top:8px" onclick="showAddBeugro()">+ Új beugrós hozzáadása</button>
   </div>
+
+  <!-- Új beugrós form -->
+  <div class="card" id="addBeugroForm" style="display:none">
+    <div class="card-title">Új beugrós</div>
+    <div class="fg"><label class="fl">Név *</label><input class="fi" type="text" id="bnNev" placeholder="Pl. Kiss Anna"></div>
+    <div class="fg"><label class="fl">Telefonszám *</label><input class="fi" type="tel" id="bnTel" placeholder="+36 30 123 4567"></div>
+    <div class="fg"><label class="fl">Megjegyzés</label><input class="fi" type="text" id="bnMegjegyzés" placeholder="Pl. tapasztalt felszolgáló"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn" onclick="saveBeugro()">Mentés</button>
+      <button class="btn" style="background:var(--parch);color:var(--ink)" onclick="hideAddBeugro()">Mégsem</button>
+    </div>
+  </div>
+
+  <!-- Rendezvényhez beosztás -->
+  <p class="sec" style="margin-top:20px">📋 Rendezvényhez beosztás</p>
+  <div class="card">
+    <div class="fg">
+      <label class="fl">Rendezvény dátuma</label>
+      <input class="fi" type="date" id="bDatum" onchange="loadBeugroBeosztás()">
+    </div>
+    <div class="fg">
+      <label class="fl">Catering típusa</label>
+      <select class="fsel" id="bCatering" onchange="updateBeugroJavaslat()">
+        <option value="">Válasszon...</option>
+        <option value="eskuvo">Esküvő</option>
+        <option value="ebed_vacsora">Ebéd / Vacsora</option>
+        <option value="svedasztalos">Svédasztalos</option>
+        <option value="bekeszites">Bekészítés</option>
+        <option value="ital_bufé">Ital / Büfé</option>
+        <option value="reggeli">Reggeli terítés</option>
+        <option value="kitelepules">Kitelepülés</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Vendégszám</label>
+      <input class="fi" type="number" id="bVendeg" min="1" max="300" placeholder="pl. 60" onchange="updateBeugroJavaslat()">
+    </div>
+    <div id="beugroJavaslat" style="display:none;background:var(--parch);border-radius:10px;padding:12px;margin:8px 0">
+      <p style="font-size:12px;color:var(--bark);font-weight:600" id="beugroJavText"></p>
+    </div>
+  </div>
+
+  <!-- Beosztás táblázat -->
+  <div class="card" id="beugroBeosztasCard" style="display:none">
+    <div class="card-title" id="beosztasCim">Beosztás</div>
+    <div id="beosztasLista"></div>
+    <button class="btn" style="margin-top:12px" onclick="saveBeosztás()">💾 Beosztás mentése</button>
+  </div>
+
 </section>
 
 <!-- ── NAPTÁR ─────────────────────────────────────────────────────────── -->
@@ -276,7 +319,58 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
 </section>
 
 <!-- ── RENDEZVÉNY ─────────────────────────────────────────────────────── -->
-<section id="tab-events" class="tab">
+<!-- ═══════════════ TAB: NAPI MENÜ ═══════════════ -->
+<section id="tab-menu" class="tab">
+  <p class="sec">🍽️ Napi menü feltöltése</p>
+
+  <!-- Aktuálisan feltöltött menü -->
+  <div class="card" id="menuCurrentCard" style="display:none">
+    <div class="card-title">Jelenleg aktív menü</div>
+    <div class="menu-current">
+      <img id="menuCurrentImg" src="" alt="Jelenlegi menü">
+    </div>
+    <p id="menuCurrentDate" style="font-size:11px;color:var(--stone);margin-top:8px;text-align:center"></p>
+  </div>
+
+  <!-- Feltöltő area -->
+  <div class="card">
+    <div class="card-title">Új menükép feltöltése</div>
+
+    <div id="menuUploadArea" class="menu-upload-area" onclick="document.getElementById('menuFileInput').click()">
+      <div class="icon">📸</div>
+      <p><strong>Koppints ide</strong> a kép kiválasztásához</p>
+      <p style="margin-top:4px;font-size:11px">vagy fényképezd le a mai menütáblát</p>
+    </div>
+    <input type="file" id="menuFileInput" accept="image/*" capture="environment" style="display:none" onchange="menuFileSelected(this)">
+
+    <!-- Előnézet feltöltés előtt -->
+    <div id="menuPreviewWrap" style="display:none;margin-top:12px">
+      <div class="menu-preview">
+        <img id="menuPreviewImg" src="" alt="Előnézet">
+        <button class="del-btn" onclick="menuClearPreview()">✕</button>
+      </div>
+      <p style="font-size:11px;color:var(--stone);text-align:center;margin-top:8px" id="menuFileName"></p>
+      <button class="btn" id="menuUploadBtn" onclick="menuUpload()" style="width:100%;margin-top:12px">
+        ☁️ Feltöltés a weboldalra
+      </button>
+    </div>
+
+    <!-- Feltöltés folyamatban -->
+    <div id="menuUploading" style="display:none;text-align:center;padding:20px">
+      <div style="font-size:28px;margin-bottom:8px">⏳</div>
+      <p style="font-size:13px;color:var(--stone)">Feltöltés folyamatban...</p>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--parch)">
+    <p style="font-size:12px;color:var(--bark);line-height:1.7">
+      💡 <strong>Hogyan működik?</strong><br>
+      Fényképezd le a mai menütáblát, majd töltsd fel. A kép azonnal megjelenik a <strong>malomerdopanzio.netlify.app</strong> weboldalon a "Napi menü" oldalon.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════ TAB: RÖGZÍTÉS ═══════════════ -->
   <div class="card">
     <div class="card-title">Esemény rögzítése</div>
     <div class="fg"><label class="fl">Rendezvény jellege</label><input class="fi" type="text" id="evType" placeholder="pl. Esküvő, Konferencia, Születésnap"></div>
@@ -338,13 +432,17 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
     Szobák
   </button>
-  <button class="nb" id="nb-wellness" onclick="showTab('wellness')">
-    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.047 8.287 8.287 0 009 9.601a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.468 5.99 5.99 0 00-1.925 3.547 5.975 5.975 0 01-2.133-1.001A3.75 3.75 0 0012 18z"/></svg>
-    Wellness
+  <button class="nb" id="nb-beugrók" onclick="showTab('beugrók')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+    Beugrók
   </button>
   <button class="nb" id="nb-calendar" onclick="showTab('calendar')">
     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Naptár
+  </button>
+  <button class="nb" id="nb-menu" onclick="showTab('menu')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
+    Menü
   </button>
   <button class="nb" id="nb-events" onclick="showTab('events')">
     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -386,6 +484,113 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
 const SURL = 'https://ztrrsewqikflamuncurh.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0cnJzZXdxaWtmbGFtdW5jdXJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0ODgyMDIsImV4cCI6MjA5MzA2NDIwMn0.oKRz_se7P5wl6cYJ-V7w8ee0i2N5hFsNv90G2BhKHxw';
 const HDR = {'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=representation'};
+
+// ── NAPI MENÜ ─────────────────────────────────────────────────────────────────
+var menuSelectedFile = null;
+
+function menuFileSelected(input) {
+  var file = input.files[0];
+  if (!file) return;
+  menuSelectedFile = file;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('menuPreviewImg').src = e.target.result;
+    document.getElementById('menuFileName').textContent = file.name + ' · ' + Math.round(file.size/1024) + ' KB';
+    document.getElementById('menuPreviewWrap').style.display = 'block';
+    document.getElementById('menuUploadArea').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function menuClearPreview() {
+  menuSelectedFile = null;
+  document.getElementById('menuPreviewWrap').style.display = 'none';
+  document.getElementById('menuUploadArea').style.display = 'block';
+  document.getElementById('menuFileInput').value = '';
+}
+
+async function menuUpload() {
+  if (!menuSelectedFile) return;
+  var btn = document.getElementById('menuUploadBtn');
+  var uploadArea = document.getElementById('menuUploading');
+  btn.disabled = true;
+  document.getElementById('menuPreviewWrap').style.display = 'none';
+  uploadArea.style.display = 'block';
+
+  try {
+    var ext = menuSelectedFile.name.split('.').pop().toLowerCase() || 'jpg';
+    var today = new Date().toISOString().split('T')[0];
+    var fileName = 'napi-menu-' + today + '.' + ext;
+
+    // Feltöltés Supabase Storage-ba
+    var res = await fetch(
+      SURL + '/storage/v1/object/menu-images/' + fileName,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SKEY,
+          'Authorization': 'Bearer ' + SKEY,
+          'Content-Type': menuSelectedFile.type || 'image/jpeg',
+          'x-upsert': 'true',
+        },
+        body: menuSelectedFile,
+      }
+    );
+
+    if (!res.ok) {
+      var err = await res.text();
+      throw new Error(err);
+    }
+
+    var publicUrl = SURL + '/storage/v1/object/public/menu-images/' + fileName;
+
+    // Aktuális menü frissítése
+    uploadArea.style.display = 'none';
+    document.getElementById('menuCurrentImg').src = publicUrl + '?t=' + Date.now();
+    document.getElementById('menuCurrentDate').textContent = 'Feltöltve: ' + today;
+    document.getElementById('menuCurrentCard').style.display = 'block';
+    document.getElementById('menuUploadArea').style.display = 'block';
+    menuSelectedFile = null;
+    document.getElementById('menuFileInput').value = '';
+    btn.disabled = false;
+    toast('✅ Menükép feltöltve! Megjelenik a weboldalon.');
+
+  } catch(e) {
+    uploadArea.style.display = 'none';
+    document.getElementById('menuPreviewWrap').style.display = 'block';
+    btn.disabled = false;
+    toast('❌ Hiba: ' + e.message);
+    console.error(e);
+  }
+}
+
+async function menuLoadCurrent() {
+  try {
+    var res = await fetch(
+      SURL + '/storage/v1/object/list/menu-images',
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SKEY,
+          'Authorization': 'Bearer ' + SKEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ limit: 20, sortBy: { column: 'created_at', order: 'desc' } }),
+      }
+    );
+    var data = await res.json();
+    if (data && data.length > 0) {
+      var latest = data[0];
+      var url = SURL + '/storage/v1/object/public/menu-images/' + latest.name;
+      document.getElementById('menuCurrentImg').src = url + '?t=' + Date.now();
+      var dateStr = latest.name.replace('napi-menu-','').replace(/\.[^.]+$/,'');
+      document.getElementById('menuCurrentDate').textContent = 'Feltöltve: ' + dateStr;
+      document.getElementById('menuCurrentCard').style.display = 'block';
+    }
+  } catch(e) {
+    console.log('Menü betöltés:', e);
+  }
+}
 
 async function sb(path, opts) {
   var res = await fetch(SURL+'/rest/v1'+path, Object.assign({headers:HDR}, opts||{}));
@@ -480,7 +685,8 @@ function showTab(id) {
   document.getElementById('tab-'+id).classList.add('active');
   document.getElementById('nb-'+id).classList.add('active');
   if (id==='rooms')    renderRooms('all');
-  if (id==='wellness') renderWellness();
+  if (id==='beugrók') renderBeugrók();
+  if (id==='menu') menuLoadCurrent();
   if (id==='calendar') renderCalendar();
   if (id==='dashboard') renderEvents();
 }
@@ -771,54 +977,6 @@ function filterRooms(status, btn) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// WELLNESS
-// ══════════════════════════════════════════════════════════════
-var SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
-
-function renderWellness() {
-  ['jacuzzi','sauna'].forEach(function(type) {
-    var cont = document.getElementById(type==='jacuzzi'?'jacSlots':'sauSlots');
-    cont.innerHTML = SLOTS.map(function(t){
-      var entry = STATE.wellness.find(function(w){ return w.type===type && w.time===t; });
-      return '<div class="ws '+(entry?'booked':'free')+'" onclick="toggleSlot(\''+type+'\',\''+t+'\')">'
-        +'<div class="ws-t">'+t+'</div>'
-        +'<div class="ws-l">'+(entry?entry.guest:'Szabad')+'</div>'
-        +'</div>';
-    }).join('');
-  });
-}
-
-async function toggleSlot(type, time) {
-  var entry = STATE.wellness.find(function(w){ return w.type===type && w.time===time; });
-  if (entry) {
-    if (!confirm('Törli a foglalást?')) return;
-    try { await sb('/wellness?id=eq.'+entry.id,{method:'DELETE'}); } catch(e){}
-    STATE.wellness = STATE.wellness.filter(function(w){ return w.id!==entry.id; });
-    renderWellness();
-    toast('Foglalás törölve');
-  }
-}
-
-async function bookWellness() {
-  var guest = document.getElementById('wGuest').value.trim();
-  var time  = document.getElementById('wTime').value;
-  var type  = document.getElementById('wType').value;
-  if (!guest) { toast('⚠️ Add meg a vendég nevét!'); return; }
-  var types = type==='both' ? ['jacuzzi','sauna'] : [type];
-  for (var i=0; i<types.length; i++) {
-    var t = types[i];
-    var existing = STATE.wellness.find(function(w){ return w.type===t && w.time===time; });
-    if (existing) { toast('⚠️ '+time+' már foglalt ('+t+')!'); continue; }
-    try {
-      var res = await sb('/wellness',{method:'POST',body:JSON.stringify({type:t,time:time,guest:guest,date:todayStr()})});
-      STATE.wellness.push(Array.isArray(res)?res[0]:res);
-    } catch(e) { toast('⚠️ Mentési hiba!'); }
-  }
-  renderWellness();
-  document.getElementById('wGuest').value='';
-  toast('✅ Wellness foglalás mentve!');
-}
-
 // ══════════════════════════════════════════════════════════════
 // CALENDAR
 // ══════════════════════════════════════════════════════════════
@@ -1226,10 +1384,6 @@ async function loadEvents() {
   STATE.events = STATE.events.filter(function(e){ return e.date>=cutStr; });
 }
 
-async function loadWellness() {
-  var data = await sb('/wellness?date=eq.'+todayStr());
-  STATE.wellness = data||[];
-}
 
 async function loadShift() {
   var data = await sb('/shift?order=updated_at.desc&limit=1');
@@ -1261,7 +1415,6 @@ document.getElementById('qDate').value  = todayStr();
     await Promise.all([
       loadRooms().catch(function(e){ console.warn('rooms:',e); }),
       loadEvents().catch(function(e){ console.warn('events:',e); }),
-      loadWellness().catch(function(e){ console.warn('wellness:',e); }),
       loadShift().catch(function(e){ console.warn('shift:',e); }),
       loadRoomBookings().catch(function(e){ console.warn('bookings:',e); })
     ]);
@@ -1270,6 +1423,167 @@ document.getElementById('qDate').value  = todayStr();
   renderEvents();
   renderCalendar();
 })();
+// ══════════════════════════════════════════════════════════════
+// BEUGRÓK — Supabase alapú, mindenki látja
+// ══════════════════════════════════════════════════════════════
+
+var BEUGRÓK = [];
+var BEOSZTÁSOK = {};
+
+var CATERING_ARÁNY = {
+  'eskuvo':       { min: 1, per: 30, leiras: 'Esküvőnél: min. 1 fő / 30 vendég' },
+  'ebed_vacsora': { min: 1, per: 30, leiras: 'Ebéd/vacsora: min. 1 fő / 30 vendég' },
+  'svedasztalos': { min: 1, per: 25, leiras: 'Svédasztalos: min. 1 fő / 25 vendég' },
+  'bekeszites':   { min: 1, per: 40, leiras: 'Bekészítés: min. 1 fő / 40 vendég' },
+  'ital_bufé':    { min: 1, per: 40, leiras: 'Ital/büfé: min. 1 fő / 40 vendég' },
+  'reggeli':      { min: 1, per: 30, leiras: 'Reggeli terítés: min. 1 fő / 30 vendég' },
+  'kitelepules':  { min: 1, per: 20, leiras: 'Kitelepülés: min. 1 fő / 20 vendég (változó)' },
+};
+
+async function loadBeugrók() {
+  try {
+    var data = await sb('/beugrók?order=created_at.asc');
+    BEUGRÓK = data || [];
+  } catch(e) { console.warn('beugrók betöltés:', e); }
+}
+
+async function loadBeosztások(datum) {
+  try {
+    var data = await sb('/beosztasok?datum=eq.' + datum + '&select=*,beugrók(*)');
+    BEOSZTÁSOK[datum] = data || [];
+  } catch(e) { console.warn('beosztások betöltés:', e); }
+}
+
+async function renderBeugrók() {
+  await loadBeugrók();
+  var list = document.getElementById('beugroList');
+  if (!list) return;
+  if (BEUGRÓK.length === 0) {
+    list.innerHTML = '<p style="font-size:13px;color:var(--stone);text-align:center;padding:16px">Még nincs beugrós a listán</p>';
+    return;
+  }
+  list.innerHTML = BEUGRÓK.map(function(b) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--parch)">' +
+      '<div>' +
+        '<div style="font-weight:600;font-size:14px;color:var(--forest)">' + b.nev + '</div>' +
+        '<div style="font-size:12px;color:var(--stone)">' + b.tel + (b.megjegyzes ? ' · ' + b.megjegyzes : '') + '</div>' +
+      '</div>' +
+      '<button onclick="deleteBeugro(\'' + b.id + '\',\'' + b.nev + '\')" style="background:none;border:none;color:var(--stone);font-size:18px;cursor:pointer;padding:4px 8px">🗑️</button>' +
+    '</div>';
+  }).join('');
+}
+
+function showAddBeugro() {
+  document.getElementById('addBeugroForm').style.display = 'block';
+  document.getElementById('bnNev').focus();
+}
+function hideAddBeugro() {
+  document.getElementById('addBeugroForm').style.display = 'none';
+  document.getElementById('bnNev').value = '';
+  document.getElementById('bnTel').value = '';
+  document.getElementById('bnMegjegyzés').value = '';
+}
+
+async function saveBeugro() {
+  var nev = document.getElementById('bnNev').value.trim();
+  var tel = document.getElementById('bnTel').value.trim();
+  var megj = document.getElementById('bnMegjegyzés').value.trim();
+  if (!nev || !tel) { toast('⚠️ Név és telefonszám kötelező!'); return; }
+  try {
+    await sb('/beugrók', { method:'POST', body: JSON.stringify({ nev, tel, megjegyzes: megj }) });
+    hideAddBeugro();
+    await renderBeugrók();
+    toast('✅ Beugrós hozzáadva: ' + nev);
+  } catch(e) { toast('❌ Hiba: ' + e.message); }
+}
+
+async function deleteBeugro(id, nev) {
+  if (!confirm(nev + ' törlése?')) return;
+  try {
+    await sb('/beugrók?id=eq.' + id, { method:'DELETE' });
+    await renderBeugrók();
+    toast('🗑️ Törölve');
+  } catch(e) { toast('❌ Hiba: ' + e.message); }
+}
+
+function updateBeugroJavaslat() {
+  var catering = document.getElementById('bCatering').value;
+  var vendeg = parseInt(document.getElementById('bVendeg').value) || 0;
+  var jav = document.getElementById('beugroJavaslat');
+  var javText = document.getElementById('beugroJavText');
+  if (!catering || !vendeg) { jav.style.display = 'none'; return; }
+  var arány = CATERING_ARÁNY[catering];
+  if (!arány) { jav.style.display = 'none'; return; }
+  var min = Math.max(arány.min, Math.ceil(vendeg / arány.per));
+  javText.textContent = arány.leiras + ' → ' + vendeg + ' főhöz minimum ' + min + ' beugrós javasolt';
+  jav.style.display = 'block';
+  loadBeugroBeosztás();
+}
+
+async function loadBeugroBeosztás() {
+  var datum = document.getElementById('bDatum').value;
+  if (!datum || BEUGRÓK.length === 0) return;
+  await loadBeosztások(datum);
+  var card = document.getElementById('beugroBeosztasCard');
+  var lista = document.getElementById('beosztasLista');
+  var cim = document.getElementById('beosztasCim');
+  cim.textContent = 'Beosztás — ' + datum;
+  var meglevo = {};
+  (BEOSZTÁSOK[datum] || []).forEach(function(b) {
+    meglevo[b.beugro_id] = b;
+  });
+  lista.innerHTML = BEUGRÓK.map(function(b) {
+    var beo = meglevo[b.id] || {};
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--parch)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+        '<div>' +
+          '<div style="font-weight:600;font-size:14px;color:var(--forest)">' + b.nev + '</div>' +
+          '<div style="font-size:12px;color:var(--stone)">' + b.tel + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:16px;align-items:center">' +
+          '<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer">' +
+            '<input type="checkbox" id="beo_' + b.id + '" ' + (beo.beosztva ? 'checked' : '') + '> Beosztva' +
+          '</label>' +
+          '<label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;color:var(--moss)">' +
+            '<input type="checkbox" id="vissz_' + b.id + '" ' + (beo.visszaigazolta ? 'checked' : '') + '> ✓ Visszaigazolta' +
+          '</label>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  card.style.display = 'block';
+}
+
+async function saveBeosztás() {
+  var datum = document.getElementById('bDatum').value;
+  var catering = document.getElementById('bCatering').value;
+  var vendeg = parseInt(document.getElementById('bVendeg').value) || 0;
+  if (!datum) { toast('⚠️ Válassz dátumot!'); return; }
+  try {
+    // Töröljük a meglévő beosztásokat erre a napra
+    await sb('/beosztasok?datum=eq.' + datum, { method:'DELETE' });
+    // Mentjük az újakat
+    var mentendok = BEUGRÓK
+      .filter(function(b) {
+        return document.getElementById('beo_' + b.id) && document.getElementById('beo_' + b.id).checked;
+      })
+      .map(function(b) {
+        return {
+          datum: datum,
+          beugro_id: b.id,
+          beosztva: true,
+          visszaigazolta: document.getElementById('vissz_' + b.id) ? document.getElementById('vissz_' + b.id).checked : false,
+          catering_tipus: catering,
+          vendegszam: vendeg,
+        };
+      });
+    if (mentendok.length > 0) {
+      await sb('/beosztasok', { method:'POST', body: JSON.stringify(mentendok) });
+    }
+    toast('✅ Beosztás mentve! (' + mentendok.length + ' fő)');
+  } catch(e) { toast('❌ Hiba: ' + e.message); }
+}
+
 </script>
 
 <!-- EDIT EVENT MODAL -->
