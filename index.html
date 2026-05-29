@@ -1628,7 +1628,6 @@ async function openBeugroModal(esemenyId, esemenyNev) {
   var body = document.getElementById('beugroModalBody');
   body.innerHTML = '<p style="font-size:13px;color:var(--stone);text-align:center;padding:20px">Betöltés...</p>';
 
-  // Betöltjük a meglévő beosztásokat erre az eseményre
   try {
     if (BEUGRÓK.length === 0) await loadBeugrók();
     var data = await sb('/esemeny_beugrók?esemeny_id=eq.' + esemenyId);
@@ -1673,9 +1672,8 @@ async function saveBeugroModal() {
   var esemenyId = _beugroModalEsemenyId;
   if (!esemenyId) return;
   try {
-    // Töröljük a meglévőket
-    await sb('/esemeny_beugrók?esemeny_id=eq.' + esemenyId, { method: 'DELETE' });
-    // Mentjük az újakat
+    // Töröljük a meglévőket - cast bigint-ként
+    await sb('/esemeny_beugrók?esemeny_id=eq.' + String(esemenyId), { method: 'DELETE' });
     var mentendok = BEUGRÓK
       .filter(function(b) {
         var cb = document.getElementById('ebeo_' + b.id);
@@ -1684,7 +1682,7 @@ async function saveBeugroModal() {
       .map(function(b) {
         var vb = document.getElementById('evisz_' + b.id);
         return {
-          esemeny_id: esemenyId,
+          esemeny_id: String(esemenyId),
           beugro_id: b.id,
           visszaigazolta: vb ? vb.checked : false,
         };
