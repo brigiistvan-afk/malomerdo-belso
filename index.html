@@ -348,10 +348,10 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
         </button>
       </div>
     </div>
-    <!-- Kamera input -->
+    <!-- Kamera input - csak fényképezés -->
     <input type="file" id="menuCameraInput" accept="image/*" capture="environment" style="display:none" onchange="menuFileSelected(this)">
-    <!-- Galéria/fájl input - capture nélkül -->
-    <input type="file" id="menuFileInput" accept="image/*,application/pdf" style="display:none" onchange="menuFileSelected(this)">
+    <!-- Galéria/fájl input - NEM capture, szabad választás -->
+    <input type="file" id="menuFileInput" accept="image/*" style="display:none" onchange="menuFileSelected(this)">
 
     <!-- Előnézet feltöltés előtt -->
     <div id="menuPreviewWrap" style="display:none;margin-top:12px">
