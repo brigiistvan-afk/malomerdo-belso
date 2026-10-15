@@ -181,6 +181,26 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
 .wt .d-be{background:#fff8e1;color:#f57f17}
 .wt .d-ki{background:#fce4ec;color:var(--red)}
 .wt .d-occ{background:#e3f2fd;color:#1565c0}
+
+/* KONYHA */
+.kh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.kh .kt{flex:1;text-align:center;font-family:var(--ff);font-size:16px;color:var(--forest)}
+.kb{background:var(--parch);border:none;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--forest)}
+.kb.on{background:var(--fmid);color:var(--cream)}
+.km{border-left:5px solid var(--moss);margin-bottom:10px}
+.km.r{border-left-color:var(--gold)}.km.e{border-left-color:#c26a1b}.km.v{border-left-color:#4b4b9a}.km.x{border-left-color:var(--stone)}
+.kmh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.kmh b{font-size:14px;color:var(--forest)}.kmh span{font-size:20px;font-weight:700;color:var(--forest)}
+.kr{padding:8px 0;border-top:1px solid rgba(0,0,0,.06);display:flex;gap:8px;align-items:flex-start}
+.kr:first-of-type{border-top:none}
+.kr .kx{flex:1;min-width:0;font-size:12px;color:var(--ink)}
+.kr .kx strong{font-size:13px}
+.kr .kn{font-size:11px;color:var(--stone);font-style:italic;margin-top:2px;word-break:break-word}
+.kr .kc{font-weight:700;font-size:14px;white-space:nowrap}
+.kr button{background:var(--parch);border:none;border-radius:8px;padding:4px 7px;font-size:13px;cursor:pointer}
+.ktag{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;background:var(--parch);color:var(--stone);border-radius:5px;padding:1px 5px;margin-left:4px}
+.kwk{display:grid;grid-template-columns:70px 1fr;gap:8px;padding:10px 0;border-top:1px solid rgba(0,0,0,.06);cursor:pointer}
+.kwk:first-child{border-top:none}
 </style>
 </head>
 <body>
@@ -320,6 +340,40 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   <div class="card" style="padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch">
     <table class="wt" id="weekTable"></table>
   </div>
+</section>
+
+
+<!-- ── KONYHA ─────────────────────────────────────────────────────────── -->
+<section id="tab-kitchen" class="tab">
+  <div class="kh">
+    <button class="kb" id="kPrev">‹</button>
+    <div class="kt" id="kTitle"></div>
+    <button class="kb" id="kNext">›</button>
+  </div>
+  <div class="kh">
+    <button class="kb on" id="kvDay">Nap</button>
+    <button class="kb" id="kvWeek">Hét</button>
+    <button class="kb" id="kToday">Ma</button>
+    <button class="kb" id="kAdd" style="margin-left:auto;background:var(--fmid);color:var(--cream)">+ Tétel</button>
+  </div>
+  <div class="card" id="kForm" style="display:none">
+    <div style="font-family:var(--ff);font-size:16px;color:var(--forest);margin-bottom:10px" id="kFormTitle">Új tétel</div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Dátum</label><input class="fi" type="date" id="kfDate"></div>
+      <div class="fg"><label class="fl">Étkezés</label>
+        <select class="fsel" id="kfMeal"><option value="reggeli">Reggeli</option><option value="ebéd">Ebéd</option><option value="vacsora">Vacsora</option><option value="egyéb">Egyéb</option></select></div>
+    </div>
+    <div class="fg"><label class="fl">Név (vendég / csoport / rendezvény)</label><input class="fi" type="text" id="kfLabel" placeholder="pl. Juhász Lenke vadászcsoport"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Létszám</label><input class="fi" type="number" id="kfCount" min="0" placeholder="fő"></div>
+      <div class="fg"><label class="fl">Időpont</label><input class="fi" type="text" id="kfTime" placeholder="pl. 16:30"></div>
+    </div>
+    <div class="fg"><label class="fl">Kért étel</label><input class="fi" type="text" id="kfFood" placeholder="pl. Félpanziós vacsora"></div>
+    <div class="fg"><label class="fl">Helyszín</label><input class="fi" type="text" id="kfPlace" placeholder="pl. Étterem"></div>
+    <div class="fg"><label class="fl">Megjegyzés</label><textarea class="fi" id="kfNote" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px"><button class="btn" id="kfSave">Mentés</button><button class="kb" id="kfCancel">Mégse</button></div>
+  </div>
+  <div id="kBody"></div>
 </section>
 
 <!-- ── RENDEZVÉNY ─────────────────────────────────────────────────────── -->
@@ -516,6 +570,10 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   <button class="nb" id="nb-calendar" onclick="showTab('calendar')">
     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
     Naptár
+  </button>
+  <button class="nb" id="nb-kitchen" onclick="showTab('kitchen')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3a4 4 0 00-4 4v1H6a1 1 0 00-1 1v1h14V9a1 1 0 00-1-1h-2V7a4 4 0 00-4-4zM6 12h12v6a2 2 0 01-2 2H8a2 2 0 01-2-2v-6z"/></svg>
+    Konyha
   </button>
   <button class="nb" id="nb-menu" onclick="showTab('menu')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
@@ -776,6 +834,7 @@ function showTab(id) {
   if (id==='menu') menuLoadCurrent();
   if (id==='calendar') { renderCalendar(); if (!calSelDate) calSelect(todayStr()); }
   if (id==='dashboard') renderEvents();
+  if (id==='kitchen') kitRender();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -938,7 +997,7 @@ async function saveEvent() {
   var ev = {
     type:type,
     date:document.getElementById('evDate').value||todayStr(),
-    end_date:document.getElementById('evEndDate') ? document.getElementById('evEndDate').value||'' : '',
+    end_date:document.getElementById('evEndDate') ? (document.getElementById('evEndDate').value||null) : null,
     end_time:document.getElementById('evEndTime') ? document.getElementById('evEndTime').value||'' : '',
     takeaway_type:document.getElementById('evTAType') ? document.getElementById('evTAType').value : 'elvitel',
     time:document.getElementById('evTime').value||'00:00',
@@ -1443,7 +1502,7 @@ async function saveEditEvent() {
     type:         document.getElementById('editType').value.trim(),
     date:         document.getElementById('editDate').value,
     time:         document.getElementById('editTime').value,
-    end_date:     document.getElementById('editEndDate').value||'',
+    end_date:     document.getElementById('editEndDate').value||null,
     end_time:     document.getElementById('editEndTime').value||'',
     place:        document.getElementById('editPlace').value,
     count:        parseInt(document.getElementById('editCount').value)||0,
@@ -1533,6 +1592,249 @@ async function loadShift() {
   }
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// KONYHA – napi étkezések (meal_plan tábla + rendezvények)
+// ══════════════════════════════════════════════════════════════
+var MEALS = [];
+var kitDate = null;
+var kitView = 'day';
+var kitEditId = null;
+var kitLoaded = true;
+var KIT_ORDER = ['reggeli','ebéd','vacsora','egyéb'];
+var KIT_NAME = {'reggeli':'Reggeli','ebéd':'Ebéd','vacsora':'Vacsora','egyéb':'Egyéb'};
+var KIT_CLS = {'reggeli':'r','ebéd':'e','vacsora':'v','egyéb':'x'};
+var KIT_DOW = ['vasárnap','hétfő','kedd','szerda','csütörtök','péntek','szombat'];
+
+function kEsc(t) {
+  return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function kAddDays(ds, n) {
+  var p = ds.split('-');
+  var d = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])+n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function kDow(ds) {
+  var p = ds.split('-');
+  return KIT_DOW[new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])).getDay()];
+}
+function kLabel(ds) {
+  var p = ds.split('-');
+  return p[0]+'. '+p[1]+'. '+p[2]+'. · '+kDow(ds);
+}
+
+async function loadMeals() {
+  try {
+    var data = await sb('/meal_plan?order=date,meal,id');
+    MEALS = Array.isArray(data) ? data : [];
+    kitLoaded = true;
+    var cutoff = kAddDays(todayStr(), -60);
+    try { await sb('/meal_plan?date=lt.'+cutoff, {method:'DELETE'}); } catch(e2){}
+    MEALS = MEALS.filter(function(m){ return m.date>=cutoff; });
+  } catch(e) {
+    kitLoaded = false;
+    MEALS = [];
+    console.warn('loadMeals:', e);
+  }
+}
+
+function kMealsFor(ds, meal) {
+  return MEALS.filter(function(m){ return m.date===ds && m.meal===meal; });
+}
+function kLinkedEventIds() {
+  var o = {};
+  MEALS.forEach(function(m){ if (m.event_id!=null) o[String(m.event_id)] = true; });
+  return o;
+}
+function kEventsFor(ds) {
+  var linked = kLinkedEventIds();
+  return STATE.events.filter(function(e){ return e.date===ds && !linked[String(e.id)]; });
+}
+// Previo alapú tájékoztató létszám (nem feltétlenül félpanzió!)
+function kPrevio(ds) {
+  var reg = 0, vac = 0;
+  var map = STATE.weeklyMap || {};
+  Object.keys(map).forEach(function(rid){
+    (map[rid]||[]).forEach(function(b){
+      var ci = b.checkinDate, co = b.checkoutDate, fo = parseInt(b.fo)||0;
+      if (!ci || !co) return;
+      if (ci<ds && ds<=co) reg += fo;
+      if (ci<=ds && ds<co) vac += fo;
+    });
+  });
+  return {reg:reg, vac:vac};
+}
+
+function kRowHtml(m) {
+  var meta = [];
+  if (m.food) meta.push(kEsc(m.food));
+  if (m.time) meta.push(kEsc(m.time));
+  if (m.place) meta.push(kEsc(m.place));
+  return '<div class="kr">'
+    +'<div class="kx"><strong>'+kEsc(m.label)+'</strong>'
+    +'<span class="ktag">'+kEsc(m.source==='email'?'email':'kézi')+'</span>'
+    +(meta.length ? '<div>'+meta.join(' · ')+'</div>' : '')
+    +(m.note ? '<div class="kn">'+kEsc(m.note)+'</div>' : '')
+    +'</div>'
+    +'<div class="kc">'+(parseInt(m.count)||0)+' fő</div>'
+    +'<button data-act="edit" data-id="'+m.id+'">✏️</button>'
+    +'<button data-act="del" data-id="'+m.id+'">🗑</button>'
+    +'</div>';
+}
+
+function kDayHtml(ds) {
+  var h = '';
+  KIT_ORDER.forEach(function(meal){
+    var rows = kMealsFor(ds, meal);
+    if (!rows.length) return;
+    var tot = 0;
+    rows.forEach(function(r){ tot += parseInt(r.count)||0; });
+    h += '<div class="card km '+KIT_CLS[meal]+'"><div class="kmh"><b>'+KIT_NAME[meal]+'</b><span>'+tot+' fő</span></div>'
+      + rows.map(kRowHtml).join('') + '</div>';
+  });
+  var evs = kEventsFor(ds);
+  if (evs.length) {
+    h += '<div class="card km x"><div class="kmh"><b>Rendezvények / kiszállítás</b></div>';
+    h += evs.map(function(e){
+      var meta = [];
+      if (e.time && e.time!=='00:00') meta.push(kEsc(e.time));
+      if (e.place) meta.push(kEsc(e.place));
+      if (e.catering && e.catering!=='Nincs catering') meta.push('🍽 '+kEsc(e.catering));
+      if (e.takeaway_type==='kiszallitas') meta.push('🚚 kiszállítás');
+      else if (e.takeaway) meta.push('🥡 elvitel');
+      if (e.end_date && e.end_date!==e.date) meta.push('→ '+kEsc(e.end_date));
+      return '<div class="kr"><div class="kx"><strong>'+kEsc(e.type)+'</strong><span class="ktag">rendezvény</span>'
+        +'<div>'+meta.join(' · ')+'</div>'
+        +(e.note ? '<div class="kn">'+kEsc(e.note)+'</div>' : '')
+        +'</div><div class="kc">'+(e.count?(parseInt(e.count)+' fő'):'')+'</div>'
+        +'<button data-act="evedit" data-id="'+e.id+'">✏️</button></div>';
+    }).join('');
+    h += '</div>';
+  }
+  if (!h) h = '<div class="card" style="text-align:center;color:var(--stone);font-size:13px;padding:20px">Erre a napra nincs étkezési tétel.</div>';
+  var pv = kPrevio(ds);
+  if (pv.reg || pv.vac) {
+    h += '<div style="font-size:11px;color:var(--stone);text-align:center;margin:4px 0 12px">Szálláslista (Previo) szerint bent: reggeli ~'+pv.reg+' fő, vacsora ~'+pv.vac+' fő (tájékoztató, nem feltétlenül félpanzió)</div>';
+  }
+  return h;
+}
+
+function kWeekHtml(ds) {
+  var h = '<div class="card">';
+  for (var i=0;i<7;i++) {
+    var d = kAddDays(ds, i);
+    var parts = KIT_ORDER.map(function(meal){
+      var t = 0; kMealsFor(d, meal).forEach(function(r){ t += parseInt(r.count)||0; });
+      return t ? (KIT_NAME[meal].charAt(0)+': <b>'+t+'</b>') : '';
+    }).filter(Boolean);
+    var evs = kEventsFor(d);
+    h += '<div class="kwk" data-act="goto" data-date="'+d+'">'
+      +'<div><b style="color:var(--forest)">'+d.slice(5).replace('-','.')+'.</b><div style="font-size:10px;color:var(--stone)">'+kDow(d)+'</div></div>'
+      +'<div style="font-size:12px">'
+      +(parts.length ? parts.join(' · ') : '<span style="color:var(--stone)">—</span>')
+      +evs.map(function(e){ return '<div style="font-size:11px;color:var(--stone)">• '+kEsc(e.type)+(e.count?' ('+parseInt(e.count)+' fő)':'')+'</div>'; }).join('')
+      +'</div></div>';
+  }
+  return h + '</div>';
+}
+
+function kitRender() {
+  if (!kitDate) kitDate = todayStr();
+  var body = document.getElementById('kBody');
+  var warn = kitLoaded ? '' : '<div class="card" style="background:#fff3cd;font-size:12px">A konyhai tábla (meal_plan) még nincs létrehozva az adatbázisban – futtasd le a meal_plan.sql fájlt a Supabase SQL Editorban.</div>';
+  document.getElementById('kTitle').textContent = kitView==='day' ? kLabel(kitDate) : (kitDate.slice(5).replace('-','.')+'. – '+kAddDays(kitDate,6).slice(5).replace('-','.')+'.');
+  document.getElementById('kvDay').className = 'kb'+(kitView==='day'?' on':'');
+  document.getElementById('kvWeek').className = 'kb'+(kitView==='week'?' on':'');
+  body.innerHTML = warn + (kitView==='day' ? kDayHtml(kitDate) : kWeekHtml(kitDate));
+}
+
+function kitShiftDate(n) {
+  kitDate = kAddDays(kitDate||todayStr(), kitView==='day' ? n : n*7);
+  kitRender();
+}
+
+function kitOpenForm(m) {
+  kitEditId = m ? m.id : null;
+  document.getElementById('kFormTitle').textContent = m ? 'Tétel módosítása' : 'Új tétel';
+  document.getElementById('kfDate').value = m ? m.date : (kitDate||todayStr());
+  document.getElementById('kfMeal').value = m ? m.meal : 'vacsora';
+  document.getElementById('kfLabel').value = m ? (m.label||'') : '';
+  document.getElementById('kfCount').value = m ? (m.count||0) : '';
+  document.getElementById('kfTime').value = m ? (m.time||'') : '';
+  document.getElementById('kfFood').value = m ? (m.food||'') : '';
+  document.getElementById('kfPlace').value = m ? (m.place||'') : '';
+  document.getElementById('kfNote').value = m ? (m.note||'') : '';
+  document.getElementById('kForm').style.display = 'block';
+  document.getElementById('kForm').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function kitCloseForm() {
+  document.getElementById('kForm').style.display = 'none';
+  kitEditId = null;
+}
+
+async function kitSave() {
+  var date = document.getElementById('kfDate').value;
+  var label = document.getElementById('kfLabel').value.trim();
+  if (!date || !label) { toast('Dátum és név kötelező'); return; }
+  var row = {
+    date: date,
+    meal: document.getElementById('kfMeal').value,
+    label: label,
+    count: parseInt(document.getElementById('kfCount').value)||0,
+    time: document.getElementById('kfTime').value.trim()||null,
+    food: document.getElementById('kfFood').value.trim()||null,
+    place: document.getElementById('kfPlace').value.trim()||null,
+    note: document.getElementById('kfNote').value.trim()||null
+  };
+  try {
+    if (kitEditId!=null) {
+      await sb('/meal_plan?id=eq.'+kitEditId, {method:'PATCH', body:JSON.stringify(row)});
+    } else {
+      row.source = 'manual';
+      await sb('/meal_plan', {method:'POST', body:JSON.stringify(row)});
+    }
+    kitCloseForm();
+    await loadMeals();
+    kitDate = date;
+    kitRender();
+    toast('Mentve ✓');
+  } catch(e) { console.error(e); toast('Mentési hiba'); }
+}
+
+async function kitDelete(id) {
+  if (!confirm('Biztosan törlöd ezt a tételt?')) return;
+  try {
+    await sb('/meal_plan?id=eq.'+id, {method:'DELETE'});
+    await loadMeals();
+    kitRender();
+  } catch(e) { console.error(e); toast('Törlési hiba'); }
+}
+
+(function kitWire() {
+  function $(i){ return document.getElementById(i); }
+  $('kPrev').onclick = function(){ kitShiftDate(-1); };
+  $('kNext').onclick = function(){ kitShiftDate(1); };
+  $('kToday').onclick = function(){ kitDate = todayStr(); kitRender(); };
+  $('kvDay').onclick = function(){ kitView='day'; kitRender(); };
+  $('kvWeek').onclick = function(){ kitView='week'; kitRender(); };
+  $('kAdd').onclick = function(){ kitOpenForm(null); };
+  $('kfSave').onclick = kitSave;
+  $('kfCancel').onclick = kitCloseForm;
+  $('kBody').onclick = function(ev) {
+    var el = ev.target.closest('[data-act]');
+    if (!el) return;
+    var act = el.getAttribute('data-act');
+    var id = parseInt(el.getAttribute('data-id'));
+    if (act==='goto') { kitDate = el.getAttribute('data-date'); kitView='day'; kitRender(); }
+    else if (act==='edit') {
+      var m = MEALS.filter(function(x){ return x.id===id; })[0];
+      if (m) kitOpenForm(m);
+    }
+    else if (act==='del') kitDelete(id);
+    else if (act==='evedit') { if (typeof openEditModal==='function') openEditModal(id); }
+  };
+})();
+
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
@@ -1555,7 +1857,8 @@ document.getElementById('qDate').value  = todayStr();
       loadRooms().catch(function(e){ console.warn('rooms:',e); }),
       loadEvents().catch(function(e){ console.warn('events:',e); }),
       loadShift().catch(function(e){ console.warn('shift:',e); }),
-      loadRoomBookings().catch(function(e){ console.warn('bookings:',e); })
+      loadRoomBookings().catch(function(e){ console.warn('bookings:',e); }),
+      loadMeals().catch(function(e){ console.warn('meals:',e); })
     ]);
   } catch(e) { console.error(e); }
   updateStats();
