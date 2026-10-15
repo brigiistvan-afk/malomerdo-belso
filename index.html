@@ -1631,6 +1631,14 @@ async function loadMeals() {
     var cutoff = kAddDays(todayStr(), -60);
     try { await sb('/meal_plan?date=lt.'+cutoff, {method:'DELETE'}); } catch(e2){}
     MEALS = MEALS.filter(function(m){ return m.date>=cutoff; });
+    // Teljesen azonos tételek (pl. kétszer lefuttatott SQL) összevonása – csak a megjelenítésben
+    var seen = {};
+    MEALS = MEALS.filter(function(m){
+      var k = [m.date,m.meal,m.label,m.count,m.food||'',m.time||'',m.place||'',m.note||''].join('|');
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
   } catch(e) {
     kitLoaded = false;
     MEALS = [];
