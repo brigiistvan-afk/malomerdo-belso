@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Malomerdő – Belső Rendszer v2.8</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d2b0e">
@@ -201,6 +201,42 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
 .ktag{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;background:var(--parch);color:var(--stone);border-radius:5px;padding:1px 5px;margin-left:4px}
 .kwk{display:grid;grid-template-columns:70px 1fr;gap:8px;padding:10px 0;border-top:1px solid rgba(0,0,0,.06);cursor:pointer}
 .kwk:first-child{border-top:none}
+/* KONYHAI MEGJEGYZÉS */
+.knote-wrap{background:var(--white);border-radius:14px;box-shadow:0 2px 10px var(--sh);padding:14px;margin-bottom:12px}
+.knote-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);font-weight:600;margin-bottom:8px}
+.knote-row{display:flex;gap:8px;align-items:flex-end}
+.knote-ta{flex:1;font-family:var(--fs);font-size:13px;padding:9px 12px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;background:var(--cream);outline:none;resize:none;min-height:44px;transition:border-color .2s;line-height:1.5}
+.knote-ta:focus{border-color:var(--moss)}
+.knote-mic{width:44px;height:44px;border-radius:12px;border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;background:var(--parch);color:var(--forest);flex-shrink:0;transition:.2s}
+.knote-mic.listening{background:var(--red);color:#fff;animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.knote-save{margin-top:8px;width:100%;padding:9px;border-radius:10px;border:none;background:var(--fmid);color:var(--cream);font-size:12px;font-weight:600;cursor:pointer;display:none}
+.knote-saved{font-size:11px;color:var(--stone);text-align:center;margin-top:6px;display:none}
+
+/* BEOSZTÁS TÁBLÁZAT */
+.beo-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.beo-nav .bt{flex:1;text-align:center;font-family:var(--ff);font-size:15px;color:var(--forest)}
+.beo-btn{background:var(--parch);border:none;border-radius:9px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;color:var(--forest)}
+.beo-btn.on{background:var(--fmid);color:var(--cream)}
+.beo-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;box-shadow:0 2px 10px var(--sh)}
+.beo-tbl{width:100%;border-collapse:collapse;background:var(--white);min-width:380px}
+.beo-tbl th{background:var(--forest);color:var(--cream);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 4px;text-align:center;font-weight:600;position:sticky;top:0;z-index:2}
+.beo-tbl th.name-col{text-align:left;padding-left:10px;min-width:70px;position:sticky;left:0;z-index:3;background:var(--forest)}
+.beo-tbl td{padding:0;border-bottom:1px solid rgba(0,0,0,.06);border-right:1px solid rgba(0,0,0,.04)}
+.beo-tbl td.name-cell{position:sticky;left:0;background:var(--white);z-index:1;padding:0 4px 0 10px;font-size:12px;font-weight:600;color:var(--forest);min-width:70px;border-right:2px solid rgba(0,0,0,.08)}
+.beo-tbl td.name-cell input{font-size:12px;font-weight:600;color:var(--forest);border:none;background:transparent;outline:none;width:calc(100% - 20px);font-family:var(--fs)}
+.beo-tbl td.name-cell .edit-ic{font-size:11px;cursor:pointer;color:var(--stone);margin-left:2px}
+.beo-tbl td.shift-cell{text-align:center;cursor:pointer;user-select:none;transition:.15s;min-width:38px;height:36px}
+.beo-tbl td.shift-cell.on{background:#d4edda}
+.beo-tbl td.shift-cell.on::after{content:'✅';font-size:14px;display:block;line-height:36px}
+.beo-tbl td.shift-cell.off::after{content:'—';font-size:13px;display:block;line-height:36px;color:var(--stone);opacity:.4}
+.beo-event-row td{padding:3px 4px;font-size:9px;text-align:center;font-weight:700;letter-spacing:.5px;border-bottom:2px solid rgba(0,0,0,.1)}
+.beo-event-row td.name-cell{text-align:left;font-size:9px}
+.beo-ev-chip{display:inline-block;padding:1px 5px;border-radius:4px;margin:1px;white-space:nowrap;font-size:8px;font-weight:700;line-height:1.6}
+.beo-ev-chip.small{background:#fff3cd;color:#856404}
+.beo-ev-chip.big{background:#f8d7da;color:#842029}
+.beo-today{background:rgba(45,110,48,.08)!important}
+.beo-tbl tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
@@ -336,10 +372,6 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   </div>
   <div id="calDetail"></div>
 
-  <p class="sec" style="margin-top:20px">🛏️ Szobák – heti foglaltság</p>
-  <div class="card" style="padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch">
-    <table class="wt" id="weekTable"></table>
-  </div>
 </section>
 
 
@@ -353,6 +385,7 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   <div class="kh">
     <button class="kb on" id="kvDay">Nap</button>
     <button class="kb" id="kvWeek">Hét</button>
+    <button class="kb" id="kvBeo" onclick="kitShowBeo()">Beosztás</button>
     <button class="kb" id="kToday">Ma</button>
     <button class="kb" id="kAdd" style="margin-left:auto;background:var(--fmid);color:var(--cream)">+ Tétel</button>
   </div>
@@ -374,6 +407,19 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
     <div style="display:flex;gap:8px"><button class="btn" id="kfSave">Mentés</button><button class="kb" id="kfCancel">Mégse</button></div>
   </div>
   <div id="kBody"></div>
+
+  <!-- BEOSZTÁS panel -->
+  <div id="beoPanel" style="display:none">
+    <div class="beo-nav">
+      <button class="beo-btn" id="beoPrev" onclick="beoShift(-1)">‹</button>
+      <div class="bt" id="beoTitle"></div>
+      <button class="beo-btn" id="beoNext" onclick="beoShift(1)">›</button>
+    </div>
+    <div class="beo-wrap">
+      <table class="beo-tbl" id="beoTable"></table>
+    </div>
+    <p style="font-size:10px;color:var(--stone);text-align:center;margin-top:8px">Cellára kattintva jelöld a műszakot · Névnél ✎ a szerkesztéshez</p>
+  </div>
 </section>
 
 <!-- ── RENDEZVÉNY ─────────────────────────────────────────────────────── -->
@@ -558,10 +604,6 @@ hr.g{border:none;border-top:1px solid rgba(201,150,30,.2);margin:12px 0}
   <button class="nb active" id="nb-dashboard" onclick="showTab('dashboard')">
     <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
     Főoldal
-  </button>
-  <button class="nb" id="nb-rooms" onclick="showTab('rooms')">
-    <svg fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
-    Szobák
   </button>
   <button class="nb" id="nb-beugrók" onclick="showTab('beugrók')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
@@ -828,7 +870,8 @@ function showTab(id) {
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('tab-'+id).classList.add('active');
-  document.getElementById('nb-'+id).classList.add('active');
+  var nb = document.getElementById('nb-'+id);
+  if (nb) nb.classList.add('active');
   if (id==='rooms')    renderRooms('all');
   if (id==='beugrók') renderBeugrók();
   if (id==='menu') menuLoadCurrent();
@@ -840,6 +883,20 @@ function showTab(id) {
 // ══════════════════════════════════════════════════════════════
 // STATS
 // ══════════════════════════════════════════════════════════════
+function updateDashboardFromMeals() {
+  var today = todayStr();
+  var reggeli = 0, vacsora = 0;
+  for (var i = 0; i < MEALS.length; i++) {
+    var m = MEALS[i];
+    if (m.date !== today) continue;
+    var cnt = parseInt(m.count) || 0;
+    if (m.meal === 'reggeli') reggeli += cnt;
+    if (m.meal === 'vacsora') vacsora += cnt;
+  }
+  if (reggeli > 0) { var r = document.getElementById('sReg'); if(r) r.value = reggeli; }
+  if (vacsora > 0) { var v = document.getElementById('sVac'); if(v) v.value = vacsora; }
+}
+
 function updateStats() {
   var occ = STATE.rooms.filter(function(r){ return r.status==='occupied'||r.status==='checkin'; }).length;
   var ki  = STATE.rooms.filter(function(r){ return r.status==='checkout'; }).length;
@@ -1592,21 +1649,6 @@ async function loadShift() {
   }
 }
 
-// Főoldal reggeli/vacsora frissítése a Konyha (meal_plan) alapján
-function updateDashboardFromMeals() {
-  var today = todayStr();
-  var reggeli = 0, vacsora = 0;
-  for (var i = 0; i < MEALS.length; i++) {
-    var m = MEALS[i];
-    if (m.date !== today) continue;
-    var cnt = parseInt(m.count) || 0;
-    if (m.meal === 'reggeli') reggeli += cnt;
-    if (m.meal === 'vacsora') vacsora += cnt;
-  }
-  if (reggeli > 0) document.getElementById('sReg').value = reggeli;
-  if (vacsora > 0) document.getElementById('sVac').value = vacsora;
-}
-
 
 // ══════════════════════════════════════════════════════════════
 // KONYHA – napi étkezések (meal_plan tábla + rendezvények)
@@ -1739,6 +1781,17 @@ function kDayHtml(ds) {
   if (pv.reg || pv.vac) {
     h += '<div style="font-size:11px;color:var(--stone);text-align:center;margin:4px 0 12px">Szálláslista (Previo) szerint bent: reggeli ~'+pv.reg+' fő, vacsora ~'+pv.vac+' fő (tájékoztató, nem feltétlenül félpanzió)</div>';
   }
+  // Napi megjegyzés
+  var noteVal = (KITCHEN_NOTES[ds] || '');
+  h += '<div class="knote-wrap">'
+    + '<div class="knote-label">📝 Napi megjegyzés</div>'
+    + '<div class="knote-row">'
+    + '<textarea class="knote-ta" id="knoteTA" rows="2" placeholder="pl. Juhász csoport késik, gluténmentes menü 3 főre...">' + kEsc(noteVal) + '</textarea>'
+    + '<button class="knote-mic" id="knoteMic" onclick="knoteToggleMic()" title="Diktálás">🎙️</button>'
+    + '</div>'
+    + '<button class="knote-save" id="knoteSave" onclick="knoteSave(\'' + ds + '\')">💾 Mentés</button>'
+    + '<div class="knote-saved" id="knoteSaved">✅ Mentve</div>'
+    + '</div>';
   return h;
 }
 
@@ -1881,11 +1934,12 @@ document.getElementById('qDate').value  = todayStr();
       loadEvents().catch(function(e){ console.warn('events:',e); }),
       loadShift().catch(function(e){ console.warn('shift:',e); }),
       loadRoomBookings().catch(function(e){ console.warn('bookings:',e); }),
-      loadMeals().catch(function(e){ console.warn('meals:',e); })
+      loadMeals().catch(function(e){ console.warn('meals:',e); }),
+      loadKitchenNotes().catch(function(e){ console.warn('notes:',e); })
     ]);
   } catch(e) { console.error(e); }
-  updateDashboardFromMeals();
   updateStats();
+  updateDashboardFromMeals();
   renderEvents();
   renderCalendar();
   // Refresh calendar detail view now that data is loaded
@@ -2331,13 +2385,277 @@ function xExportCSV() {
   toast('✅ CSV letöltve!');
 }
 
-// XLSX library lazy load
+// XLSX library lazy load – több CDN fallback
 function xLoadXLSX(cb) {
   if (window.XLSX) { cb && cb(); return; }
-  var s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  s.onload = function(){ cb && cb(); };
-  document.head.appendChild(s);
+  var CDNS = [
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+    'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+    'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+  ];
+  var idx = 0;
+  function tryNext() {
+    if (idx >= CDNS.length) { toast('❌ Excel könyvtár nem töltődött be'); return; }
+    var s = document.createElement('script');
+    s.src = CDNS[idx++];
+    s.onload = function(){ cb && cb(); };
+    s.onerror = function(){ tryNext(); };
+    document.head.appendChild(s);
+  }
+  tryNext();
+}
+
+// ══════════════════════════════════════════════════════
+// KONYHAI NAPI MEGJEGYZÉS
+// ══════════════════════════════════════════════════════
+var KITCHEN_NOTES = {};
+var knoteRecognition = null;
+
+async function loadKitchenNotes() {
+  try {
+    var data = await sb('/kitchen_notes?order=date');
+    if (Array.isArray(data)) {
+      KITCHEN_NOTES = {};
+      data.forEach(function(n){ KITCHEN_NOTES[n.date] = n.note || ''; });
+    }
+  } catch(e) { /* tábla még nem létezik */ }
+}
+
+async function knoteSave(ds) {
+  var ta = document.getElementById('knoteTA');
+  var btn = document.getElementById('knoteSave');
+  var saved = document.getElementById('knoteSaved');
+  if (!ta) return;
+  var val = ta.value.trim();
+  btn.disabled = true;
+  try {
+    // UPSERT: ha van, frissít; ha nincs, létrehoz
+    var existing = await sb('/kitchen_notes?date=eq.'+ds);
+    if (Array.isArray(existing) && existing.length > 0) {
+      await sb('/kitchen_notes?date=eq.'+ds, {method:'PATCH', body:JSON.stringify({note: val})});
+    } else {
+      await sb('/kitchen_notes', {method:'POST', body:JSON.stringify({date: ds, note: val})});
+    }
+    KITCHEN_NOTES[ds] = val;
+    btn.style.display = 'none';
+    saved.style.display = 'block';
+    setTimeout(function(){ saved.style.display = 'none'; }, 2000);
+    toast('✅ Megjegyzés mentve');
+  } catch(e) {
+    toast('❌ Mentési hiba: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function knoteToggleMic() {
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { toast('⚠️ Ez a böngésző nem támogatja a diktálást'); return; }
+  var mic = document.getElementById('knoteMic');
+  var ta  = document.getElementById('knoteTA');
+  if (knoteRecognition) {
+    knoteRecognition.stop();
+    knoteRecognition = null;
+    mic.classList.remove('listening');
+    mic.textContent = '🎙️';
+    return;
+  }
+  knoteRecognition = new SpeechRecognition();
+  knoteRecognition.lang = 'hu-HU';
+  knoteRecognition.continuous = true;
+  knoteRecognition.interimResults = true;
+  var base = ta.value;
+  knoteRecognition.onresult = function(e) {
+    var interim = '';
+    var final = '';
+    for (var i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    ta.value = base + final + interim;
+    if (final) {
+      base = base + final;
+      var saveBtn = document.getElementById('knoteSave');
+      if (saveBtn) saveBtn.style.display = 'block';
+    }
+  };
+  knoteRecognition.onerror = function(e) {
+    toast('⚠️ Diktálási hiba: ' + e.error);
+    mic.classList.remove('listening');
+    mic.textContent = '🎙️';
+    knoteRecognition = null;
+  };
+  knoteRecognition.onend = function() {
+    mic.classList.remove('listening');
+    mic.textContent = '🎙️';
+    knoteRecognition = null;
+  };
+  knoteRecognition.start();
+  mic.classList.add('listening');
+  mic.textContent = '⏹️';
+}
+
+// Mentés gomb megjelenítése gépeléskor
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.id === 'knoteTA') {
+    var btn = document.getElementById('knoteSave');
+    if (btn) btn.style.display = 'block';
+  }
+});
+
+// ══════════════════════════════════════════════════════
+// BEOSZTÁS TÁBLÁZAT
+// ══════════════════════════════════════════════════════
+var BEO = {
+  offset: 0, // hány héttel előre (0=jelen hét)
+  names: JSON.parse(localStorage.getItem('beoNames')||'["Bogyó","Árpi","Levi","Lóri","","",""]'),
+  shifts: JSON.parse(localStorage.getItem('beoShifts')||'{}'),
+  visible: false
+};
+
+function beoSave() {
+  localStorage.setItem('beoNames', JSON.stringify(BEO.names));
+  localStorage.setItem('beoShifts', JSON.stringify(BEO.shifts));
+}
+
+function beoWeekDates(offset) {
+  var now = new Date();
+  var day = now.getDay(); // 0=vas
+  var mon = new Date(now);
+  mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
+  var days = [];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+function beoDateStr(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function beoRender() {
+  var days = beoWeekDates(BEO.offset);
+  var today = beoDateStr(new Date());
+  var DAY_NAMES = ['H','K','Sz','Cs','P','Sz','V'];
+  var MONTH_HU = ['jan','feb','már','ápr','máj','jún','júl','aug','szep','okt','nov','dec'];
+
+  // Cím
+  var f = days[0], l = days[6];
+  document.getElementById('beoTitle').textContent =
+    f.getFullYear() + '. ' + MONTH_HU[f.getMonth()] + ' ' + f.getDate() + ' – ' + MONTH_HU[l.getMonth()] + ' ' + l.getDate() + '.';
+
+  // Rendezvények napokra
+  var evByDay = {};
+  days.forEach(function(d) {
+    var ds = beoDateStr(d);
+    var evs = (STATE.events || []).filter(function(e) {
+      return e.date <= ds && (e.end_date ? e.end_date >= ds : e.date === ds);
+    });
+    if (evs.length) evByDay[ds] = evs;
+  });
+
+  // Táblázat fejléc
+  var html = '<thead><tr>';
+  html += '<th class="name-col">Dolgozó</th>';
+  days.forEach(function(d, i) {
+    var ds = beoDateStr(d);
+    var cls = ds === today ? ' style="background:#2d6e30"' : '';
+    html += '<th' + cls + '>' + DAY_NAMES[i] + '<br><span style="font-size:8px;opacity:.7">' + d.getDate() + '</span></th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  // Rendezvény sor
+  var hasEv = Object.keys(evByDay).length > 0;
+  if (hasEv) {
+    html += '<tr class="beo-event-row" style="background:#f8f9fa">';
+    html += '<td class="name-cell" style="font-size:9px;color:var(--stone)">📅 Prog.</td>';
+    days.forEach(function(d) {
+      var ds = beoDateStr(d);
+      var evs = evByDay[ds] || [];
+      var cell = '';
+      evs.forEach(function(e) {
+        var guests = e.guest_count ? parseInt(e.guest_count) : 0;
+        var cls = guests >= 50 ? 'big' : 'small';
+        var label = e.type || 'Rendezvény';
+        if (label.length > 10) label = label.slice(0,10) + '…';
+        cell += '<span class="beo-ev-chip ' + cls + '">' + label + (guests ? ' ' + guests + 'fő' : '') + '</span>';
+      });
+      var todayCls = ds === today ? ' class="beo-today"' : '';
+      html += '<td' + todayCls + '>' + (cell || '') + '</td>';
+    });
+    html += '</tr>';
+  }
+
+  // Dolgozó sorok
+  BEO.names.forEach(function(name, ri) {
+    html += '<tr>';
+    // Névcella
+    html += '<td class="name-cell">';
+    html += '<input type="text" value="' + (name||'').replace(/"/g,'&quot;') + '" placeholder="[név]" ';
+    html += 'onchange="beoSetName(' + ri + ',this.value)" style="width:58px">';
+    html += '</td>';
+    // Műszak cellák
+    days.forEach(function(d) {
+      var ds = beoDateStr(d);
+      var key = ri + '_' + ds;
+      var on = BEO.shifts[key] ? 'on' : 'off';
+      var todayCls = ds === today ? ' beo-today' : '';
+      html += '<td class="shift-cell ' + on + todayCls + '" onclick="beoToggle(' + ri + ',\'' + ds + '\',this)"></td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody>';
+  document.getElementById('beoTable').innerHTML = html;
+}
+
+function beoToggle(ri, ds, cell) {
+  var key = ri + '_' + ds;
+  BEO.shifts[key] = !BEO.shifts[key];
+  cell.className = cell.className.replace(/\b(on|off)\b/, BEO.shifts[key] ? 'on' : 'off');
+  beoSave();
+}
+
+function beoSetName(ri, val) {
+  BEO.names[ri] = val;
+  beoSave();
+}
+
+function beoShift(dir) {
+  BEO.offset += dir;
+  if (BEO.offset < 0) BEO.offset = 0;
+  if (BEO.offset > 3) BEO.offset = 3;
+  document.getElementById('beoPrev').disabled = BEO.offset === 0;
+  document.getElementById('beoNext').disabled = BEO.offset === 3;
+  beoRender();
+}
+
+function kitShowBeo() {
+  BEO.visible = !BEO.visible;
+  var panel = document.getElementById('beoPanel');
+  var body  = document.getElementById('kBody');
+  var kForm = document.getElementById('kForm');
+  var kAdd  = document.getElementById('kAdd');
+  var btn   = document.getElementById('kvBeo');
+  if (BEO.visible) {
+    panel.style.display = 'block';
+    body.style.display = 'none';
+    kForm.style.display = 'none';
+    kAdd.style.display = 'none';
+    btn.classList.add('on');
+    document.getElementById('beoPrev').disabled = BEO.offset === 0;
+    document.getElementById('beoNext').disabled = BEO.offset === 3;
+    beoRender();
+  } else {
+    panel.style.display = 'none';
+    body.style.display = 'block';
+    kAdd.style.display = '';
+    btn.classList.remove('on');
+    kitRender();
+  }
 }
 
 // Export tab megnyitásakor: alapértelmezett dátum + XLSX betölt
